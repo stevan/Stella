@@ -7,6 +7,16 @@ use Stella::Actor;
 use Stella::ActorRef;
 use Stella::ActorSystem;
 
+use Exporter 'import';
+
+our @EXPORT = qw[
+    event
+];
+
+sub event ($symbol, @payload) {
+    Stella::Event->new( symbol => $symbol, payload => \@payload )
+}
+
 __END__
 
 =pod

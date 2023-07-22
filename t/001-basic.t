@@ -33,7 +33,7 @@ class PingPong :isa(Stella::Actor) {
     method Ping ($ctx, $message) {
         if ($pings < $max) {
             say "got Ping($name)[$pings] <= $max";
-            $ctx->send( $message->from, Stella::Event->new( symbol  => *Pong ) );
+            $ctx->send( $message->from, ::event *Pong => () );
             $pings++;
         }
         else {
@@ -45,7 +45,7 @@ class PingPong :isa(Stella::Actor) {
     method Pong ($ctx, $message) {
         if ($pongs < $max) {
             say "got Pong($name)[$pongs] <= $max";
-            $ctx->send( $message->from, Stella::Event->new( symbol  => *Ping ) );
+            $ctx->send( $message->from, ::event *Ping => () );
             $pongs++;
         }
         else {
@@ -76,7 +76,7 @@ sub init ($ctx) {
         my $Ping = $ctx->spawn( PingPong->new( name => "Ping($_)", max => $max ) );
         my $Pong = $ctx->spawn( PingPong->new( name => "Pong($_)", max => $max ) );
 
-        $Ping->send( $Pong, Stella::Event->new( symbol => *PingPong::Pong ) );
+        $Ping->send( $Pong, event *PingPong::Pong => () );
     }
 }
 
