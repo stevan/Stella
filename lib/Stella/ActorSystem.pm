@@ -116,11 +116,26 @@ class Stella::ActorSystem {
 
 __END__
 
-# -----------------------------------------------------------------------------
-# ActorSystem
-# -----------------------------------------------------------------------------
-# The ActorSystem does a number of things:
-# - it manages ActorRef instances of spawned Actors
-# - it handles the Message delivery queue
-# - it manages the loop within which the Actors live
-# -----------------------------------------------------------------------------
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Stella::ActorSystem
+
+=head1 DESCRIPTION
+
+The L<Stella::ActorSystem> does a number of things:
+
+=over 1
+
+=item it manages L<Stella::ActorRef> instances of spawned L<Stella::Actors>
+
+=item it handles the L<Stella::Message> delivery queue
+
+=item it manages the loop within which the L<Stella::Actor> instances live
+
+=back
+
+=cut

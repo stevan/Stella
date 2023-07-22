@@ -19,12 +19,19 @@ class Stella::Event {
 
 __END__
 
-# -----------------------------------------------------------------------------
-# Event
-# -----------------------------------------------------------------------------
-# An Event can thought of as a deffered method call. The `$symbol` being the
-# name of the method, and the $payload being the an ARRAY ref of arguments to
-# the method.
-#
-# An Event is the primary payload of the Message object.
-# -----------------------------------------------------------------------------
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Stella::Event
+
+=head1 DESCRIPTION
+
+A L<Stella::Event> can thought of as a deffered method call. The C<$symbol> being
+the name of the method, and the C<$payload> being a list of arguments to the method.
+
+An L<Stella::Event> is the primary payload of the L<Stella::Message> object.
+
+=cut

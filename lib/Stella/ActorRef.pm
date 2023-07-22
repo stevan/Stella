@@ -47,13 +47,22 @@ class Stella::ActorRef {
 
 __END__
 
-# -----------------------------------------------------------------------------
-# ActorRef
-# -----------------------------------------------------------------------------
-# The ActorRef is a wrapper around the Actor and the ActorSystem that provides
-# a number of convenience methods. It is most often used as a "context"
-# variable that is passed to all dispatched methods.
-#
-# ActorRef can also be seen as an "activation record" of the Actor within the
-# ActorSystem, as it is the keeper of the PID value
-# -----------------------------------------------------------------------------
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Stella::ActorRef
+
+=head1 DESCRIPTION
+
+The L<Stella::ActorRef> is a wrapper around the L<Stella::Actor> and the
+L<Stella::ActorSystem> that provides a number of convenience methods. It is
+most often used as a "context" variable that is passed to dispatched methods.
+
+L<Stella::ActorRef> can also be seen as an "activation record" of the
+L<Stella::Actor> within the L<Stella::ActorSystem>, as it is the keeper of
+the PID value.
+
+=cut

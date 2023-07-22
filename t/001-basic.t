@@ -84,7 +84,7 @@ sub init ($ctx) {
 # Lets-ago!
 # -----------------------------------------------------------------------------
 
-Stella::ActorSystem->new( init => \&init )->loop( 0.5 );
+Stella::ActorSystem->new( init => \&init )->loop( $ENV{DEBUG} ? 0.5 : () );
 
 done_testing();
 
