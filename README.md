@@ -4,6 +4,12 @@
 
 Stella is an implementation of the [Actor Model](https://en.wikipedia.org/wiki/Actor_model) for Perl.
 
+This is (yet another) implementation of an [ongoing project](https://github.com/stevan/ELO) of mine to make a sensible Actor system for Perl. This version uses the newly released – but still experimental – `class` feature of Perl v5.38.
+
+This started out as a [gist](https://gist.github.com/stevan/06a091d8ce775181e8c023864beba173) but I quickly decided that this path was fruitful and so created this module.
+
+## Example
+
 ```perl
 
 use Stella;
