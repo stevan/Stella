@@ -56,20 +56,36 @@ class Stella::ActorSystem {
 
     method run_deferred ($phase) {
         return unless @deferred;
+
         LOG ">>> deferred[ $phase ]" if DEBUG;
-        (shift @deferred)->() while @deferred;
+
+        try { (shift @deferred)->() while @deferred }
+        catch ($e) {
+            confess "Error occurred while running deferred($phase) callbacks: $e"
+        }
     }
 
     method exit_loop {
         if (DEBUG) {
-            @dead_letter_queue and say "Dead Letter Queue:\n".join "\n" => map { join ', ' => @$_ } @dead_letter_queue;
-            %actor_refs        and say "Zombies:\n".join ", " => sort { $a <=> $b } keys %actor_refs;
+            if (@dead_letter_queue) {
+                say "Dead Letter Queue:\n".join "\n" =>
+                    map { join ', ' => @$_ } @dead_letter_queue;
+            }
+            if (%actor_refs) {
+                say "Zombies:\n".join ", " =>
+                    sort { $a <=> $b } keys %actor_refs;
+            }
         }
     }
 
     method run_init {
         my $init_ctx = $self->spawn( Stella::Actor->new );
-        $init->( $init_ctx );
+
+        try { $init->( $init_ctx ) }
+        catch ($e) {
+            confess "Error occurred while running init callback: $e"
+        }
+
         $self->despawn($init_ctx);
     }
 
@@ -91,19 +107,23 @@ class Stella::ActorSystem {
     }
 
     method loop ($delay=undef) {
+        my $tick = 0;
 
         LINE "init" if DEBUG;
         $self->run_init;
 
         LINE "start" if DEBUG;
         while (1) {
-            LINE "tick" if DEBUG;
+            $tick++;
+            LINE sprintf "tick(%03d)" => $tick if DEBUG;
             $self->tick;
+
             $self->run_deferred('idle');
             last unless @msg_queue;
+
             sleep($delay) if defined $delay;
         }
-        LINE "exiting" if DEBUG;
+        LINE "end" if DEBUG;
 
         $self->run_deferred('cleanup');
         $self->exit_loop;
