@@ -13,10 +13,6 @@ our @EXPORT = qw[
     event
 ];
 
-sub event ($symbol, @payload) {
-    Stella::Event->new( symbol => $symbol, payload => \@payload )
-}
-
 __END__
 
 =pod
