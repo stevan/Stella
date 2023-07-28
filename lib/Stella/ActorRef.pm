@@ -11,15 +11,25 @@ class Stella::ActorRef {
     field $system :param;
     field $actor  :param;
 
+    field $behavior;
+
     ADJUST {
         defined $pid                    || confess 'The `$pid` param must defined value';
         $system isa Stella::ActorSystem || confess 'The `$system` param must be an ActorSystem';
         $actor  isa Stella::Actor       || confess 'The `$actor` param must be an Actor';
+
+        $behavior = $actor->behavior;
     }
 
     method pid    { $pid    }
     method system { $system }
     method actor  { $actor  }
+
+    method apply ($message) {
+        $message isa Stella::Message  || confess 'The `$message` arg must be a Message';
+
+        $behavior->apply( $self, $message );
+    }
 
     method spawn ($actor) {
         $actor isa Stella::Actor || confess 'The `$actor` arg must be an Actor';

@@ -53,6 +53,10 @@ class PingPong :isa(Stella::Actor) {
             _exit_both( $ctx, $message->from );
         }
     }
+
+    method behavior {
+        Stella::Behavior::Method->new( allowed => [ *Ping, *Pong ] );
+    }
 }
 
 # -----------------------------------------------------------------------------

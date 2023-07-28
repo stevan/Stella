@@ -3,15 +3,11 @@ use v5.38;
 
 use Stella::Event;
 use Stella::Message;
+use Stella::Behavior;
+use Stella::Behavior::Method;
 use Stella::Actor;
 use Stella::ActorRef;
 use Stella::ActorSystem;
-
-use Exporter 'import';
-
-our @EXPORT = qw[
-    event
-];
 
 __END__
 

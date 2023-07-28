@@ -2,19 +2,12 @@
 use v5.38;
 use experimental 'class';
 
+use Stella::Behavior;
+
 class Stella::Actor {
-    use Carp 'confess';
 
-    method apply ($ctx, $message) {
-        $ctx     isa Stella::ActorRef || confess 'The `$ctx` arg must be an ActorRef';
-        $message isa Stella::Message  || confess 'The `$message` arg must be a Message';
-
-        my $symbol = $message->event->symbol;
-        my $method = $self->can($symbol);
-
-        defined $method || confess "Unable to find message for ($symbol)";
-
-        $self->$method( $ctx, $message );
+    method behavior {
+        Stella::Behavior->new
     }
 }
 

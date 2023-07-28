@@ -95,7 +95,7 @@ class Stella::ActorSystem {
             my $msg = shift @msgs;
             if ( my $actor_ref = $actor_refs{ $msg->to->pid } ) {
                 try {
-                    $actor_ref->actor->apply( $actor_ref, $msg );
+                    $actor_ref->apply( $msg );
                 } catch ($e) {
                     $self->add_to_dead_letter( $e => $msg );
                 }
