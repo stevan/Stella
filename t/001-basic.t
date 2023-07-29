@@ -4,6 +4,7 @@ use v5.38;
 use experimental 'class';
 
 use Test::More;
+use Test::Differences;
 
 use ok 'Stella';
 
@@ -20,6 +21,7 @@ use ok 'Stella';
 # -----------------------------------------------------------------------------
 
 class PingPong :isa(Stella::Actor) {
+    use Test::More;
 
     field $name :param;  # so I can identify myself in the logs
     field $max  :param;  # the max number of ping/pong(s) to allow
@@ -32,24 +34,24 @@ class PingPong :isa(Stella::Actor) {
 
     method Ping ($ctx, $message) {
         if ($pings < $max) {
-            say "got Ping($name)[$pings] <= $max";
+            pass("...got Ping($name)[$pings] <= $max");
             $ctx->send( $message->from, Stella::Event->new( symbol => *Pong ) );
             $pings++;
         }
         else {
-            say "!!! ending Ping at($name)[$pings] <= $max";
+            pass("!!! ending Ping at($name)[$pings] <= $max");
             _exit_both( $ctx, $message->from );
         }
     }
 
     method Pong ($ctx, $message) {
         if ($pongs < $max) {
-            say "got Pong($name)[$pongs] <= $max";
+            pass("... got Pong($name)[$pongs] <= $max");
             $ctx->send( $message->from, Stella::Event->new( symbol => *Ping ) );
             $pongs++;
         }
         else {
-            say "!!! ending Pong at($name)[$pongs] <= $max";
+            pass("!!! ending Pong at($name)[$pongs] <= $max");
             _exit_both( $ctx, $message->from );
         }
     }
@@ -80,7 +82,12 @@ sub init ($ctx) {
         my $Ping = $ctx->spawn( PingPong->new( name => "Ping($_)", max => $max ) );
         my $Pong = $ctx->spawn( PingPong->new( name => "Pong($_)", max => $max ) );
 
+        isa_ok($Ping, 'Stella::ActorRef');
+        isa_ok($Pong, 'Stella::ActorRef');
+
         $Ping->send( $Pong, Stella::Event->new( symbol => *PingPong::Pong ) );
+
+        pass('... starting test');
     }
 }
 
@@ -88,7 +95,13 @@ sub init ($ctx) {
 # Lets-ago!
 # -----------------------------------------------------------------------------
 
-Stella::ActorSystem->new( init => \&init )->loop( $ENV{DEBUG} ? 0.5 : () );
+my $loop = Stella::ActorSystem->new( init => \&init );
+isa_ok($loop, 'Stella::ActorSystem');
+
+$loop->loop( $ENV{DEBUG} ? 0.5 : () );
+
+eq_or_diff([$loop->DeadLetterQueue],[],'... the DeadLetterQueue is empty');
+eq_or_diff([$loop->ActiveActorRefs],[],'... there are no Zombie actors');
 
 done_testing();
 

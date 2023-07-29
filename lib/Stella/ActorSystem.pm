@@ -53,7 +53,6 @@ class Stella::ActorSystem {
         push @dead_letter_queue => [ $reason, $message ];
     }
 
-
     method run_deferred ($phase) {
         return unless @deferred;
 
@@ -132,6 +131,10 @@ class Stella::ActorSystem {
         return;
     }
 
+    # Debugger routines
+
+    method DeadLetterQueue { @dead_letter_queue }
+    method ActiveActorRefs { keys %actor_refs   }
 }
 
 __END__
