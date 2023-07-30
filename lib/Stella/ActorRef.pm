@@ -32,7 +32,9 @@ class Stella::ActorRef {
     }
 
     method add_timer (%args) {
-        $system->schedule_timer( Stella::Timer->new( %args ) );
+        my $timer = Stella::Timer->new( %args );
+        $system->schedule_timer( $timer );
+        return $timer;
     }
 
     method spawn ($actor) {

@@ -36,14 +36,22 @@ sub init ($ctx) {
     my $Foo = $ctx->spawn( Foo->new );
     isa_ok($Foo, 'Stella::ActorRef');
 
-    $ctx->add_timer(
+    my $t1 = $ctx->add_timer(
         timeout  => 1,
         callback => sub { $ctx->send( $Foo, Stella::Event->new( symbol => *Foo::Bar ) ) }
     );
 
-    $ctx->add_timer(
+    my $t3 = $ctx->add_timer(
+        timeout  => 3,
+        callback => sub { fail('This timer(3) should never happen') }
+    );
+
+    my $t2 = $ctx->add_timer(
         timeout  => 2,
-        callback => sub { $ctx->kill( $Foo ) }
+        callback => sub {
+            $t3->cancel;
+            $ctx->kill( $Foo );
+        }
     );
 }
 
