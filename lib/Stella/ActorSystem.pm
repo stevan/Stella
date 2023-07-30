@@ -11,7 +11,7 @@ class Stella::ActorSystem {
     my $PIDS = 0;
 
     field %actor_refs;        # PID to ActorRef mapping of active Actors
-    field @timers;            # queue of Timer objects to run
+    field @timers;            # queue of Timer/Interval objects to run
     field @deferred;          # queue used to defer actions until end of loop
     field @msg_queue;         # queue of message to be deliverd to actors
     field @dead_letter_queue; # queue of messages that failed to delivery for a given reason
