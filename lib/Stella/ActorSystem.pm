@@ -6,6 +6,8 @@ class Stella::ActorSystem {
     use Time::HiRes 'sleep';
     use Carp        'confess';
 
+    use Stella::Util::Debug;
+
     my $PIDS = 0;
 
     field %actor_refs;
@@ -15,10 +17,11 @@ class Stella::ActorSystem {
 
     field $init :param;
 
-    use constant DEBUG => $ENV{DEBUG} // 0;
+    field $logger;
 
-    my sub LINE ($label) { warn join ' ' => '--', $label, ('-' x (80 - length $label)), "\n" }
-    my sub LOG  (@msg)   { warn @msg, "\n" }
+    ADJUST {
+        $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+    }
 
     method spawn ($actor) {
         $actor isa Stella::Actor || confess 'The `$actor` arg must be an Actor';
@@ -32,7 +35,6 @@ class Stella::ActorSystem {
         $actor_ref isa Stella::ActorRef || confess 'The `$actor_ref` arg must be an ActorRef';
 
         push @deferred => sub {
-            LOG "Despawning ".$actor_ref->pid if DEBUG;
             delete $actor_refs{ $actor_ref->pid };
         };
     }
@@ -56,24 +58,9 @@ class Stella::ActorSystem {
     method run_deferred ($phase) {
         return unless @deferred;
 
-        LOG ">>> deferred[ $phase ]" if DEBUG;
-
         try { (shift @deferred)->() while @deferred }
         catch ($e) {
-            confess "Error occurred while running deferred($phase) callbacks: $e"
-        }
-    }
-
-    method exit_loop {
-        if (DEBUG) {
-            if (@dead_letter_queue) {
-                say "Dead Letter Queue:\n".join "\n" =>
-                    map { join ', ' => @$_ } @dead_letter_queue;
-            }
-            if (%actor_refs) {
-                say "Zombies:\n".join ", " =>
-                    sort { $a <=> $b } keys %actor_refs;
-            }
+            confess "Error occurred while running deferred($phase) callbacks: $e";
         }
     }
 
@@ -108,13 +95,13 @@ class Stella::ActorSystem {
     method loop ($delay=undef) {
         my $tick = 0;
 
-        LINE "init" if DEBUG;
+        $logger->line("init") if INFO;
         $self->run_init;
 
-        LINE "start" if DEBUG;
+        $logger->line("start") if INFO;
         while (1) {
             $tick++;
-            LINE sprintf "tick(%03d)" => $tick if DEBUG;
+            $logger->line(sprintf "tick(%03d)" => $tick) if INFO;
             $self->tick;
 
             $self->run_deferred('idle');
@@ -122,12 +109,11 @@ class Stella::ActorSystem {
 
             sleep($delay) if defined $delay;
         }
-        LINE "end" if DEBUG;
+        $logger->line("end") if INFO;
 
         $self->run_deferred('cleanup');
-        $self->exit_loop;
+        $logger->line("exited") if INFO;
 
-        LINE "exited" if DEBUG;
         return;
     }
 

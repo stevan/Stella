@@ -22,6 +22,7 @@ use ok 'Stella';
 
 class PingPong :isa(Stella::Actor) {
     use Test::More;
+    use Stella::Util::Debug;
 
     field $name :param;  # so I can identify myself in the logs
     field $max  :param;  # the max number of ping/pong(s) to allow
@@ -30,28 +31,34 @@ class PingPong :isa(Stella::Actor) {
     field $pings = 0;
     field $pongs = 0;
 
+    field $logger;
+
+    ADJUST {
+        $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+    }
+
     my sub _exit_both ($ctx, $a) {  $ctx->exit; $ctx->kill( $a ) }
 
     method Ping ($ctx, $message) {
         if ($pings < $max) {
-            pass("...got Ping($name)[$pings] <= $max");
+            $logger->log_from( $ctx, INFO, "...got Ping($name)[$pings] <= $max" ) if INFO;
             $ctx->send( $message->from, Stella::Event->new( symbol => *Pong ) );
             $pings++;
         }
         else {
-            pass("!!! ending Ping at($name)[$pings] <= $max");
+            $logger->log_from( $ctx, WARN, "!!! ending Ping at($name)[$pings] <= $max" ) if WARN;
             _exit_both( $ctx, $message->from );
         }
     }
 
     method Pong ($ctx, $message) {
         if ($pongs < $max) {
-            pass("... got Pong($name)[$pongs] <= $max");
+            $logger->log_from( $ctx, INFO, "... got Pong($name)[$pongs] <= $max" ) if INFO;
             $ctx->send( $message->from, Stella::Event->new( symbol => *Ping ) );
             $pongs++;
         }
         else {
-            pass("!!! ending Pong at($name)[$pongs] <= $max");
+            $logger->log_from( $ctx, WARN, "!!! ending Pong at($name)[$pongs] <= $max" ) if WARN;
             _exit_both( $ctx, $message->from );
         }
     }
@@ -79,11 +86,20 @@ sub init ($ctx) {
     foreach ( 1 .. 10 ) {
         my $max = int(rand(10));
 
-        my $Ping = $ctx->spawn( PingPong->new( name => "Ping($_)", max => $max ) );
-        my $Pong = $ctx->spawn( PingPong->new( name => "Pong($_)", max => $max ) );
+        my $ping = PingPong->new( name => "Ping($_)", max => $max );
+        my $pong = PingPong->new( name => "Pong($_)", max => $max );
+
+        isa_ok($ping, 'Stella::Actor');
+        isa_ok($pong, 'Stella::Actor');
+
+        my $Ping = $ctx->spawn( $ping );
+        my $Pong = $ctx->spawn( $pong );
 
         isa_ok($Ping, 'Stella::ActorRef');
         isa_ok($Pong, 'Stella::ActorRef');
+
+        is($Ping->actor, $ping, '... the actor ref has the right actor');
+        is($Pong->actor, $pong, '... the actor ref has the right actor');
 
         $Ping->send( $Pong, Stella::Event->new( symbol => *PingPong::Pong ) );
 
