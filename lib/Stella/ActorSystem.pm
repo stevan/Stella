@@ -111,7 +111,7 @@ class Stella::ActorSystem {
                 }
             }
             else {
-                $self->add_to_dead_letter( ACTOR_NOT_FOUND => $msg );
+                $self->add_to_dead_letter( 'ACTOR NOT FOUND' => $msg );
             }
         }
     }
