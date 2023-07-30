@@ -31,6 +31,10 @@ class Stella::ActorRef {
         $behavior->apply( $self, $message );
     }
 
+    method add_timer (%args) {
+        $system->schedule_timer( Stella::Timer->new( %args ) );
+    }
+
     method spawn ($actor) {
         $actor isa Stella::Actor || confess 'The `$actor` arg must be an Actor';
 

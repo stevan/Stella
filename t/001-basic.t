@@ -114,7 +114,7 @@ sub init ($ctx) {
 my $loop = Stella::ActorSystem->new( init => \&init );
 isa_ok($loop, 'Stella::ActorSystem');
 
-$loop->loop( $ENV{STELLA_DELAY} // () );
+$loop->loop;
 
 my $stats = $loop->statistics;
 

@@ -8,6 +8,7 @@ use Stella::Behavior::Method;
 use Stella::Actor;
 use Stella::ActorRef;
 use Stella::ActorSystem;
+use Stella::Timer;
 
 __END__
 
