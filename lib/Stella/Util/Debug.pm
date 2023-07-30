@@ -3,12 +3,12 @@ use v5.38;
 
 use Stella::Util::Debug::Logger;
 
-use constant DEBUG     => $ENV{STELLA_DEBUG} // 0;
-use constant LOG_LEVEL => $ENV{STELLA_LOG}   // 0;
+use constant LOG_LEVEL => $ENV{STELLA_DEBUG} ? 4 : ($ENV{STELLA_LOG} // 0);
 
 use constant INFO  => (LOG_LEVEL >= 1 ? 1 : 0);
 use constant WARN  => (LOG_LEVEL >= 2 ? 2 : 0);
 use constant ERROR => (LOG_LEVEL >= 3 ? 3 : 0);
+use constant DEBUG => (LOG_LEVEL >= 4 ? 4 : 0);
 
 use Exporter 'import';
 

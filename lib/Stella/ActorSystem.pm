@@ -16,6 +16,7 @@ class Stella::ActorSystem {
     field @dead_letter_queue;
 
     field $init :param;
+    field $init_ctx;
 
     field $logger;
 
@@ -28,11 +29,22 @@ class Stella::ActorSystem {
 
         my $a = Stella::ActorRef->new( pid => ++$PIDS, system => $self, actor => $actor );
         $actor_refs{ $a->pid } = $a;
+
+        $logger->log_from(
+            $init_ctx, DEBUG,
+            (sprintf "Spawning ACTOR(%s) with PID(%d) and REF(%s)" => "$actor", $a->pid, "$a")
+        ) if DEBUG && $init_ctx;
+
         $a;
     }
 
     method despawn ($actor_ref) {
         $actor_ref isa Stella::ActorRef || confess 'The `$actor_ref` arg must be an ActorRef';
+
+        $logger->log_from(
+            $init_ctx, DEBUG,
+            (sprintf "Despawning REF(%s) with PID(%d)" => "$actor_ref", $actor_ref->pid)
+        ) if DEBUG;
 
         push @deferred => sub {
             delete $actor_refs{ $actor_ref->pid };
@@ -53,6 +65,11 @@ class Stella::ActorSystem {
 
     method add_to_dead_letter ($reason, $message) {
         push @dead_letter_queue => [ $reason, $message ];
+
+        $logger->log_from(
+            $init_ctx, ERROR,
+            "Adding MSG($message) to Dead Letter Queue because ($reason)"
+        ) if ERROR;
     }
 
     method run_deferred ($phase) {
@@ -65,14 +82,21 @@ class Stella::ActorSystem {
     }
 
     method run_init {
-        my $init_ctx = $self->spawn( Stella::Actor->new );
+        $init_ctx = $self->spawn( Stella::Actor->new );
+
+        $logger->log_from( $init_ctx, DEBUG, "Running init callback ...") if DEBUG;
 
         try { $init->( $init_ctx ) }
         catch ($e) {
             confess "Error occurred while running init callback: $e"
         }
+    }
 
+    method exit_loop {
+        $logger->log_from( $init_ctx, DEBUG, "Exiting loop ...") if DEBUG;
         $self->despawn($init_ctx);
+        $self->run_deferred('cleanup');
+        $logger->log_from( $init_ctx, DEBUG, "Exited loop") if DEBUG;
     }
 
     method tick {
@@ -111,16 +135,20 @@ class Stella::ActorSystem {
         }
         $logger->line("end") if INFO;
 
-        $self->run_deferred('cleanup');
+        $self->exit_loop;
         $logger->line("exited") if INFO;
 
         return;
     }
 
-    # Debugger routines
+    # ...
 
-    method DeadLetterQueue { @dead_letter_queue }
-    method ActiveActorRefs { keys %actor_refs   }
+    method statistics {
+        +{
+            dead_letter_queue => \@dead_letter_queue,
+            zombies           => [ keys %actor_refs ],
+        }
+    }
 }
 
 __END__

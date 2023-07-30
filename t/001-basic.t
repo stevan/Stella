@@ -116,8 +116,10 @@ isa_ok($loop, 'Stella::ActorSystem');
 
 $loop->loop( $ENV{DEBUG} ? 0.5 : () );
 
-eq_or_diff([$loop->DeadLetterQueue],[],'... the DeadLetterQueue is empty');
-eq_or_diff([$loop->ActiveActorRefs],[],'... there are no Zombie actors');
+my $stats = $loop->statistics;
+
+eq_or_diff($stats->{dead_letter_queue},[],'... the DeadLetterQueue is empty');
+eq_or_diff($stats->{zombies},[],'... there are no Zombie actors');
 
 done_testing();
 
