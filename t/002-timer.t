@@ -7,6 +7,7 @@ use Test::More;
 use Test::Differences;
 
 use ok 'Stella';
+use ok 'Stella::Util::Debug';
 
 # ...
 
@@ -33,12 +34,17 @@ class Foo :isa(Stella::Actor) {
 
 sub init ($ctx) {
 
+    my $logger; $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+
     my $Foo = $ctx->spawn( Foo->new );
     isa_ok($Foo, 'Stella::ActorRef');
 
     my $t1 = $ctx->add_timer(
         timeout  => 1,
-        callback => sub { $ctx->send( $Foo, Stella::Event->new( symbol => *Foo::Bar ) ) }
+        callback => sub {
+            $logger->log_from( $ctx, INFO, "...Sending *Bar to Foo within Timer(1)" ) if INFO;
+            $ctx->send( $Foo, Stella::Event->new( symbol => *Foo::Bar ) )
+        }
     );
 
     my $t3 = $ctx->add_timer(
@@ -49,6 +55,7 @@ sub init ($ctx) {
     my $t2 = $ctx->add_timer(
         timeout  => 2,
         callback => sub {
+            $logger->log_from( $ctx, INFO, "...Canceling Timer(3) and killing Foo within Timer(2)" ) if INFO;
             $t3->cancel;
             $ctx->kill( $Foo );
         }

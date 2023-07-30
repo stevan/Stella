@@ -7,6 +7,7 @@ use Test::More;
 use Test::Differences;
 
 use ok 'Stella';
+use ok 'Stella::Util::Debug';
 
 # ...
 
@@ -22,9 +23,9 @@ class Foo :isa(Stella::Actor) {
     }
 
     method Bar ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, "...got *Bar" ) if INFO;
-        pass('... we got the *Bar message');
         $count++;
+        $logger->log_from( $ctx, INFO, "...got *Bar :count($count)" ) if INFO;
+        pass("... we got the *Bar message :count($count)");
         if ($count > 6) {
             fail("... we should not get more than ~5 messages, got ($count)");
         }
@@ -38,17 +39,23 @@ class Foo :isa(Stella::Actor) {
 
 sub init ($ctx) {
 
+    my $logger; $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+
     my $Foo = $ctx->spawn( Foo->new );
     isa_ok($Foo, 'Stella::ActorRef');
 
     my $i = $ctx->add_interval(
         timeout  => 1,
-        callback => sub { $ctx->send( $Foo, Stella::Event->new( symbol => *Foo::Bar ) ) }
+        callback => sub {
+            $logger->log_from( $ctx, INFO, "...Sending *Bar to Foo within Interval(1)" ) if INFO;
+            $ctx->send( $Foo, Stella::Event->new( symbol => *Foo::Bar ) )
+        }
     );
 
     my $t = $ctx->add_timer(
         timeout  => 5,
         callback => sub {
+            $logger->log_from( $ctx, INFO, "...Canceling Interval(1) and killing Foo within Timer(1)" ) if INFO;
             $i->cancel;
             $ctx->kill( $Foo );
         }

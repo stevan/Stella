@@ -174,7 +174,9 @@ class Stella::ActorSystem {
                     } catch ($e) {
                         die "Timer callback failed ($timer) because: $e";
                     }
-                    push @intervals => $t if $t isa Stella::Timer::Interval;
+                    push @intervals => $t
+                        if $t isa Stella::Timer::Interval
+                        && !$t->cancelled;
                 }
             }
 
