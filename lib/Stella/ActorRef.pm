@@ -3,6 +3,7 @@ use v5.38;
 use experimental 'class';
 
 use Stella::Message;
+use Stella::Timer;
 
 class Stella::ActorRef {
     use Carp 'confess';
@@ -33,6 +34,12 @@ class Stella::ActorRef {
 
     method add_timer (%args) {
         my $timer = Stella::Timer->new( %args );
+        $system->schedule_timer( $timer );
+        return $timer;
+    }
+
+    method add_interval (%args) {
+        my $timer = Stella::Timer::Interval->new( %args );
         $system->schedule_timer( $timer );
         return $timer;
     }

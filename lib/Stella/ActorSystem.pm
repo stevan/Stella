@@ -156,12 +156,12 @@ class Stella::ActorSystem {
     }
 
     method tick {
-
         # timers ...
 
         my $now = $self->now;
 
         if ( @timers ) {
+            my @intervals;
             $logger->log_from( $init_ctx, DEBUG, "Got timers ...") if DEBUG;
             while (@timers && $timers[0]->[0] <= $now) {
                 $logger->log_from( $init_ctx, DEBUG, "Running timers ($now) ...") if DEBUG;
@@ -174,8 +174,11 @@ class Stella::ActorSystem {
                     } catch ($e) {
                         die "Timer callback failed ($timer) because: $e";
                     }
+                    push @intervals => $t if $t isa Stella::Timer::Interval;
                 }
             }
+
+            $self->schedule_timer( $_ ) foreach @intervals;
         }
 
         # messages ...

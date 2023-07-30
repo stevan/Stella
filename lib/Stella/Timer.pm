@@ -32,6 +32,8 @@ class Stella::Timer {
     }
 }
 
+class Stella::Timer::Interval :isa(Stella::Timer) {}
+
 __END__
 
 =pod
