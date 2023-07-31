@@ -34,7 +34,6 @@ class Service :isa(Stella::Actor) {
 
         my ($x, $y) = @$args;
         try {
-            $ctx->next_tick(sub {
             $promise->resolve(
                 Stella::Event->new(
                     symbol  => *Response,
@@ -47,7 +46,6 @@ class Service :isa(Stella::Actor) {
                     ]
                 )
             );
-            });
             $logger->log_from( $ctx, INFO, "Promise resolved!" ) if INFO;
         } catch ($e) {
             chomp $e;
