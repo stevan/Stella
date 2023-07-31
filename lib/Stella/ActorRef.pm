@@ -2,8 +2,9 @@
 use v5.38;
 use experimental 'class';
 
+use Stella::Timer; # also loads Interval
 use Stella::Message;
-use Stella::Timer;
+use Stella::Promise;
 
 class Stella::ActorRef {
     use Carp 'confess';
@@ -25,6 +26,10 @@ class Stella::ActorRef {
     method pid    { $pid    }
     method system { $system }
     method actor  { $actor  }
+
+    method promise { Stella::Promise->new( system => $system ) }
+
+    method next_tick ($f) { $system->next_tick( $f ) }
 
     method apply ($message) {
         $message isa Stella::Message  || confess 'The `$message` arg must be a Message';

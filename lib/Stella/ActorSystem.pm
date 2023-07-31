@@ -11,8 +11,8 @@ class Stella::ActorSystem {
     my $PIDS = 0;
 
     field %actor_refs;        # PID to ActorRef mapping of active Actors
+    field @callbacks;         # queue of callbacks to be run in a given tick
     field @timers;            # queue of Timer/Interval objects to run
-    field @deferred;          # queue used to defer actions until end of loop
     field @msg_queue;         # queue of message to be deliverd to actors
     field @dead_letter_queue; # queue of messages that failed to delivery for a given reason
 
@@ -36,24 +36,45 @@ class Stella::ActorSystem {
 
         $logger->log_from(
             $init_ctx, DEBUG,
-            (sprintf "Spawning ACTOR(%s) with PID(%d) and REF(%s)" => "$actor", $a->pid, "$a")
+            (sprintf "Spawning ACTOR(%s) PID(%d) REF(%s)" => "$actor", $a->pid, "$a"),
+            " >> caller: ".(caller(2))[3]
         ) if DEBUG && $init_ctx;
 
         $a;
     }
 
-    method despawn ($actor_ref) {
+    method despawn ($actor_ref, $immediate=0) {
         $actor_ref isa Stella::ActorRef || confess 'The `$actor_ref` arg must be an ActorRef';
 
         $logger->log_from(
             $init_ctx, DEBUG,
-            (sprintf "Request despawning of REF(%s) with PID(%d)" => "$actor_ref", $actor_ref->pid)
+            (sprintf "Request despawning of REF(%s) PID(%d)" => "$actor_ref", $actor_ref->pid),
+            " >> caller: ".(caller(2))[3]
         ) if DEBUG;
 
-        push @deferred => sub {
-            $logger->log_from( $init_ctx, DEBUG, "... Despawning REF($actor_ref) PID(".$actor_ref->pid.")") if DEBUG;
+        if ($immediate) {
+            $logger->log_from( $init_ctx, DEBUG, "Immediate!! Despawning REF($actor_ref) PID(".$actor_ref->pid.")") if DEBUG;
             delete $actor_refs{ $actor_ref->pid };
-        };
+        }
+        else {
+            # add this to the front of the queue
+            # for the next-tick to make sure it
+            # is done as soon as possible after
+            # this tick
+            unshift @callbacks => sub {
+                $logger->log_from( $init_ctx, DEBUG, "... Despawning REF($actor_ref) PID(".$actor_ref->pid.")") if DEBUG;
+                delete $actor_refs{ $actor_ref->pid };
+            };
+        }
+    }
+
+    method next_tick ($f) {
+        ref $f eq 'CODE' || confess 'The `$f` arg must be a CODE ref';
+
+        $logger->log_from( $init_ctx, DEBUG, "Adding callback for next-tick >> caller: ".(caller(2))[3] ) if DEBUG;
+
+        push @callbacks => $f;
+        return;
     }
 
     method enqueue_message ($message) {
@@ -61,11 +82,12 @@ class Stella::ActorSystem {
 
         $logger->log_from(
             $init_ctx, DEBUG,
-            (sprintf "Enqueue Message to(%s) from(%s) event(%s)" =>
+            (sprintf "Enqueue Message TO(%s) FROM(%s) EVENT(%s)" =>
                 $message->to->pid,
                 $message->from->pid,
                 $message->event->symbol,
-            )
+            ),
+            " >> caller: ".(caller(2))[3]
         ) if DEBUG;
 
         push @msg_queue => $message;
@@ -86,17 +108,6 @@ class Stella::ActorSystem {
         ) if ERROR;
     }
 
-    method run_deferred ($phase) {
-        return unless @deferred;
-
-        $logger->log_from( $init_ctx, DEBUG, "Running deferred ...") if DEBUG;
-
-        try { (shift @deferred)->() while @deferred }
-        catch ($e) {
-            confess "Error occurred while running deferred($phase) callbacks: $e";
-        }
-    }
-
     method run_init {
         $init_ctx = $self->spawn( Stella::Actor->new );
 
@@ -110,8 +121,7 @@ class Stella::ActorSystem {
 
     method exit_loop {
         $logger->log_from( $init_ctx, DEBUG, "Exiting loop ...") if DEBUG;
-        $self->despawn($init_ctx);
-        $self->run_deferred('cleanup');
+        $self->despawn($init_ctx, 1);
         $logger->log_from( $init_ctx, DEBUG, "Exited loop") if DEBUG;
     }
 
@@ -183,6 +193,22 @@ class Stella::ActorSystem {
             $self->schedule_timer( $_ ) foreach @intervals;
         }
 
+        # callbacks ...
+
+        if ( @callbacks ) {
+            my @cbs = @callbacks;
+            @callbacks = ();
+
+            while (@cbs) {
+                my $f = shift @cbs;
+                try {
+                    $f->();
+                } catch ($e) {
+                    die "Callback failed ($f) because: $e";
+                }
+            }
+        }
+
         # messages ...
 
         if (@msg_queue) {
@@ -213,12 +239,10 @@ class Stella::ActorSystem {
         $self->run_init;
 
         $logger->line("start") if INFO;
-        while ( @timers || @msg_queue ) {
+        while ( @timers || @msg_queue || @callbacks ) {
             $tick++;
             $logger->line(sprintf "tick(%03d)" => $tick) if INFO;
             $self->tick;
-
-            $self->run_deferred('idle');
 
             # if we have timers, but nothing in
             # the queues, then we can wait

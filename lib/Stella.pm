@@ -9,6 +9,7 @@ use Stella::Actor;
 use Stella::ActorRef;
 use Stella::ActorSystem;
 use Stella::Timer;
+use Stella::Promise;
 
 __END__
 
