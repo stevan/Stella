@@ -15,6 +15,9 @@ class Input :isa(Stella::Actor) {
     use Test::More;
     use Stella::Util::Debug;
 
+    use IO::Socket::SSL;
+    use HTTP::Request;
+
     field $logger;
 
     ADJUST {
@@ -24,27 +27,37 @@ class Input :isa(Stella::Actor) {
     method Read ($ctx, $message) {
         $logger->log_from( $ctx, INFO, "...got *Read" ) if INFO;
 
-        my $w = $ctx->add_watcher(
-            fh       => \*STDIN,
-            poll     => 'r',
-            callback => sub ($fh) {
-                $logger->log_from( $ctx, INFO, "... STDIN is ready to read" ) if INFO;
-                my $input = <$fh>;
-                chomp $input;
-                $logger->log_from( $ctx, INFO, "... read ($input) from STDIN, sending *Echo" ) if INFO;
-                $ctx->send( $ctx, Stella::Event->new( symbol => *Echo, payload => [ $input ] ) );
+        my $socket = IO::Socket::SSL->new('www.google.com:443') || die 'Could not connect SSL to google';
+           $socket->print(  HTTP::Request->new( GET => '/' )->as_string );
+
+        my $r;
+
+        $logger->log_from( $ctx, INFO, "... Setting (30)s timeout while waiting on Socket " ) if INFO;
+        my $t = $ctx->add_timer(
+            timeout  => 30,
+            callback => sub {
+                $logger->log_from( $ctx, INFO, "... Timed out waiting for Socket" ) if INFO;
+                fail('... unable to get response after 30(s)');
+                $ctx->remove_watcher( $r );
+                $ctx->exit;
+                $socket->close;
             }
         );
 
-        $logger->log_from( $ctx, INFO, "... Setting (5)s timeout while waiting on STDIN " ) if INFO;
-        $ctx->add_timer(
-            timeout  => 5,
-            callback => sub {
-                $logger->log_from( $ctx, INFO, "... Timed out waiting for STDIN" ) if INFO;
-                $ctx->remove_watcher( $w );
+        $r = $ctx->add_watcher(
+            fh       => $socket,
+            poll     => 'r',
+            callback => sub ($socket) {
+                $logger->log_from( $ctx, INFO, "... Socket is ready to read" ) if INFO;
+                my $line = <$socket>;
+                like($line, qr/200 OK/, '... got the correct response');
+                $ctx->remove_watcher( $r );
                 $ctx->exit;
+                $t->cancel;
+                $socket->close;
             }
         );
+
     }
 
     method Echo ($ctx, $message) {
@@ -81,14 +94,7 @@ my $stats = $loop->statistics;
 
 eq_or_diff($stats->{dead_letter_queue},[],'... the DeadLetterQueue is empty');
 eq_or_diff($stats->{zombies},[],'... there are no Zombie actors');
-eq_or_diff($stats->{watchers},{ r => {},w => {} },'... there are no watchers actors');
+eq_or_diff($stats->{watchers},{ r => {}, w => {} },'... there are no watchers actors');
 
 done_testing();
-
-
-
-
-
-
-
 

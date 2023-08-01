@@ -210,7 +210,6 @@ class Stella::ActorSystem {
         }
     }
 
-
     ## ------------------------------------------------------------------------
     ## The TICK
     ## ------------------------------------------------------------------------
@@ -325,14 +324,31 @@ class Stella::ActorSystem {
 
             # if we have timers, but nothing in
             # the queues, then we can wait
+            #
+            # we do not wait for callbacks because
+            # any that exist were added with next_tick
+            # and so should happen in the next tick
             if ( @timers && !@msg_queue ) {
                 my $next_timer = $timers[0];
 
                 if ( $next_timer && $next_timer->[1]->@* ) {
+
+                    my @ts = $next_timer->[1]->@*;
+
+                    # XXX - the below might need to be in a loop ???
+
+                    # if they are all cancelled
+                    if ( 0 == scalar grep !$_->cancelled, @ts ) {
+                        shift @timers;            # drop this set of timers
+                        next unless @timers;      # loop if we have no more timers
+                        $next_timer = $timers[0]; # grab the next timer
+                    }
+
                     my $wait = ($next_timer->[0] - $time);
 
                     # do not wait for negative values ...
                     if ($wait > $Stella::Timer::TIMER_PRECISION_DECIMAL) {
+
                         # XXX - should have some kind of max-timeout here
                         $logger->line( sprintf 'wait(%f)' => $wait ) if INFO;
 
