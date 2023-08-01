@@ -28,6 +28,10 @@ class Stella::ActorSystem {
         $logger = Stella::Util::Debug->logger if LOG_LEVEL;
     }
 
+    ## ------------------------------------------------------------------------
+    ## Process Management
+    ## ------------------------------------------------------------------------
+
     method spawn ($actor) {
         $actor isa Stella::Actor || confess 'The `$actor` arg must be an Actor';
 
@@ -68,14 +72,9 @@ class Stella::ActorSystem {
         }
     }
 
-    method next_tick ($f) {
-        ref $f eq 'CODE' || confess 'The `$f` arg must be a CODE ref';
-
-        $logger->log_from( $init_ctx, DEBUG, "Adding callback for next-tick >> caller: ".(caller(2))[3] ) if DEBUG;
-
-        push @callbacks => $f;
-        return;
-    }
+    ## ------------------------------------------------------------------------
+    ## Messages
+    ## ------------------------------------------------------------------------
 
     method enqueue_message ($message) {
         $message isa Stella::Message || confess 'The `$message` arg must be a Message';
@@ -108,6 +107,19 @@ class Stella::ActorSystem {
         ) if ERROR;
     }
 
+    ## ------------------------------------------------------------------------
+    ## Loop Management
+    ## ------------------------------------------------------------------------
+
+    method next_tick ($f) {
+        ref $f eq 'CODE' || confess 'The `$f` arg must be a CODE ref';
+
+        $logger->log_from( $init_ctx, DEBUG, "Adding callback for next-tick >> caller: ".(caller(2))[3] ) if DEBUG;
+
+        push @callbacks => $f;
+        return;
+    }
+
     method run_init {
         $init_ctx = $self->spawn( Stella::Actor->new );
 
@@ -125,7 +137,9 @@ class Stella::ActorSystem {
         $logger->log_from( $init_ctx, DEBUG, "Exited loop") if DEBUG;
     }
 
-    # ticks and timers ..
+    ## ------------------------------------------------------------------------
+    ## Timers
+    ## ------------------------------------------------------------------------
 
     method now  {
         state $MONOTONIC = Time::HiRes::CLOCK_MONOTONIC();
@@ -164,6 +178,10 @@ class Stella::ActorSystem {
             die "This should never happen";
         }
     }
+
+    ## ------------------------------------------------------------------------
+    ## The TICK
+    ## ------------------------------------------------------------------------
 
     method tick {
         # timers ...
@@ -229,7 +247,9 @@ class Stella::ActorSystem {
         }
     }
 
-    our $TIMER_PRECISION = 0.001;
+    ## ------------------------------------------------------------------------
+    ## The main loop
+    ## ------------------------------------------------------------------------
 
     method loop {
 
@@ -253,7 +273,7 @@ class Stella::ActorSystem {
                     my $wait = ($next_timer->[0] - $time);
 
                     # do not wait for negative values ...
-                    if ($wait > $TIMER_PRECISION) {
+                    if ($wait > $Stella::Timer::TIMER_PRECISION) {
                         # XXX - should have some kind of max-timeout here
                         $logger->line( sprintf 'wait(%f)' => $wait ) if INFO;
                         sleep( $wait );
@@ -269,9 +289,16 @@ class Stella::ActorSystem {
         return;
     }
 
-    # ...
+    ## ------------------------------------------------------------------------
+    ## Statistics
+    ## ------------------------------------------------------------------------
 
     method statistics {
+        # TODO:
+        # Make this into a hash which exists for the
+        # lifetime of the system and collects stats
+        # and then it can add these things at the
+        # end.
         +{
             dead_letter_queue => \@dead_letter_queue,
             zombies           => [ keys %actor_refs ],
