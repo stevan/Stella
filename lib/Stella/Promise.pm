@@ -45,6 +45,7 @@ class Stella::Promise {
             if ($error) {
                 $p->reject( $error );
             }
+
             if ( $result isa Stella::Promise ) {
                 $result->then(
                     sub { $p->resolve(@_); () },

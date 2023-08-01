@@ -273,7 +273,7 @@ class Stella::ActorSystem {
                     my $wait = ($next_timer->[0] - $time);
 
                     # do not wait for negative values ...
-                    if ($wait > $Stella::Timer::TIMER_PRECISION) {
+                    if ($wait > $Stella::Timer::TIMER_PRECISION_DECIMAL) {
                         # XXX - should have some kind of max-timeout here
                         $logger->line( sprintf 'wait(%f)' => $wait ) if INFO;
                         sleep( $wait );
