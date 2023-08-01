@@ -1,11 +1,12 @@
 
 use v5.38;
-use experimental 'class', 'try';
+use experimental 'class', 'try', 'builtin';
 
 class Stella::ActorSystem {
     use Time::HiRes 'sleep';
     use Carp        'confess';
 
+    use builtin qw[ blessed refaddr ];
     use IO::Select;
 
     use Stella::Util::Debug;
@@ -31,7 +32,9 @@ class Stella::ActorSystem {
     ADJUST {
         $logger = Stella::Util::Debug->logger if LOG_LEVEL;
 
-        $select = IO::Select->new;
+        # set up the I/O stuff
+        $select   = IO::Select->new;
+        %watchers = ( r => {}, w => {} );
     }
 
     ## ------------------------------------------------------------------------
@@ -125,11 +128,44 @@ class Stella::ActorSystem {
             (sprintf "Adding `%s` watcher for fh(%s)" => $watcher->poll, $watcher->fh)
         ) if DEBUG;
 
-        # initialist structure ...
-        $watchers{ $watcher->poll }                   //= {};
-        $watchers{ $watcher->poll }->{ $watcher->fh } //= [];
-        push @{ $watchers{ $watcher->poll }->{ $watcher->fh } } => $watcher;
-        $select->add( $watcher->fh );
+        my ($poll, $fh) = ($watcher->poll, $watcher->fh);
+
+        # initialist structure for the fh if needed ...
+        $watchers{ $poll }->{ $fh } //= [];
+        push @{ $watchers{ $poll }->{ $fh } } => $watcher;
+
+        # Only add it to select if it hasn't already been added
+        $select->add( $fh ) unless $select->exists( $fh );
+    }
+
+    method remove_watcher ($watcher) {
+        $watcher isa Stella::Watcher || confess 'The `$watcher` arg must be a Watcher';
+
+        my ($poll, $fh) = ($watcher->poll, $watcher->fh);
+
+        exists $watchers{ $poll } || confess 'Watcher not found, no poll('.$poll.') watchers registered';
+        exists $watchers{ $poll }->{ $fh }
+            || confess 'Watcher not found, no poll('.$poll.') => fh('.$fh.') watchers registered';
+
+        my $watchers = $watchers{ $poll }->{ $fh };
+
+        (scalar grep { refaddr $_ eq refaddr $watcher } @$watchers)
+            || confess 'Watcher not found, no matching watcher('.$watcher.') for poll('.$poll.') => fh('.$fh.')';
+
+        $logger->log_from( $init_ctx, DEBUG,
+            (sprintf "Removing `%s` watcher for fh(%s)" => $poll, $fh)
+        ) if DEBUG;
+
+        # remove the watcher ...
+        @$watchers = grep { refaddr $_ ne refaddr $watcher } @$watchers;
+
+        # if there are no other watchers ...
+        unless (@$watchers) {
+            # remove the fh from the structure
+            delete $watchers{ $poll }->{ $fh };
+            # and remove it from the select
+            $select->remove( $fh );
+        }
     }
 
     ## ------------------------------------------------------------------------
@@ -299,29 +335,44 @@ class Stella::ActorSystem {
                     if ($wait > $Stella::Timer::TIMER_PRECISION_DECIMAL) {
                         # XXX - should have some kind of max-timeout here
                         $logger->line( sprintf 'wait(%f)' => $wait ) if INFO;
+
+                        # FIXME:
+                        # This could all be done better,
+                        # and outside of the main loop
                         my ($r, $w, $e) = IO::Select::select( $select, undef, undef, $wait );
 
-                        if (defined $r && @$r) {
+                        my @watchers;
+                        if (defined $w && @$w) {
+                            $logger->log_from( $init_ctx, DEBUG, "Got write handles") if DEBUG;
+                            foreach my $fh ( @$r ) {
+                                if ( my $ws = $watchers{w}->{ $fh } ) {
+                                    $logger->log_from( $init_ctx, DEBUG, "Found write watchers for fh($fh)") if DEBUG;
+                                    push @watchers => [ $fh, $ws ];
+                                }
+                            }
+                        }
+                        elsif (defined $r && @$r) {
                             $logger->log_from( $init_ctx, DEBUG, "Got read handles") if DEBUG;
                             foreach my $fh ( @$r ) {
                                 if ( my $ws = $watchers{r}->{ $fh } ) {
                                     $logger->log_from( $init_ctx, DEBUG, "Found read watchers for fh($fh)") if DEBUG;
-                                    foreach my $watcher ( @$ws ) {
-                                        try { $watcher->callback->( $fh ) }
-                                        catch ($e) {
-                                            confess "Error occurred while running Watcher callback: $e"
-                                        }
-                                    }
+                                    push @watchers => [ $fh, $ws ];
                                 }
                             }
-                        }
-                        elsif (defined $w && @$w) {
-                            $logger->log_from( $init_ctx, DEBUG, "Got write handles") if DEBUG;
-                            die 'Should not get a writable select';
                         }
                         elsif (defined $e && @$e) {
                             $logger->log_from( $init_ctx, DEBUG, "Got exception handles") if DEBUG;
                             die 'Should not get a exception select';
+                        }
+
+                        foreach ( @watchers ) {
+                            my ($fh, $ws) = @$_;
+                            foreach my $watcher ( @$ws ) {
+                                try { $watcher->callback->( $fh ) }
+                                catch ($e) {
+                                    confess "Error occurred while running Watcher callback: $e"
+                                }
+                            }
                         }
                     }
                 }
@@ -348,6 +399,19 @@ class Stella::ActorSystem {
         +{
             dead_letter_queue => [ @dead_letter_queue ],
             zombies           => [ keys %actor_refs   ],
+            watchers          => {
+                # TODO - improve this
+                r => +{
+                    map {
+                        $_ => $watchers{r}->{$_}
+                    } keys $watchers{r}->%*
+                },
+                w => +{
+                    map {
+                        $_ => $watchers{w}->{$_}
+                    } keys $watchers{w}->%*
+                },
+            },
         }
     }
 }

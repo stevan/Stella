@@ -28,11 +28,21 @@ class Input :isa(Stella::Actor) {
             fh       => \*STDIN,
             poll     => 'r',
             callback => sub ($fh) {
-                $logger->log_from( $ctx, WARN, "... STDIN is ready to read" ) if INFO;
+                $logger->log_from( $ctx, INFO, "... STDIN is ready to read" ) if INFO;
                 my $input = <$fh>;
                 chomp $input;
-                $logger->log_from( $ctx, WARN, "... read ($input) from STDIN, sending *Echo" ) if INFO;
+                $logger->log_from( $ctx, INFO, "... read ($input) from STDIN, sending *Echo" ) if INFO;
                 $ctx->send( $ctx, Stella::Event->new( symbol => *Echo, payload => [ $input ] ) );
+            }
+        );
+
+        $logger->log_from( $ctx, INFO, "... Setting (5)s timeout while waiting on STDIN " ) if INFO;
+        $ctx->add_timer(
+            timeout  => 5,
+            callback => sub {
+                $logger->log_from( $ctx, INFO, "... Timed out waiting for STDIN" ) if INFO;
+                $ctx->remove_watcher( $w );
+                $ctx->exit;
             }
         );
     }
@@ -57,15 +67,6 @@ sub init ($ctx) {
 
     $logger->log_from( $ctx, INFO, "...Sending *Read to Input within Timer(1)" ) if INFO;
     $ctx->send( $Input, Stella::Event->new( symbol => *Input::Read ) );
-
-    my $i = $ctx->add_interval(
-        timeout  => 1,
-        callback => sub {
-            state $x = 0;
-            #$logger->log_from( $ctx, INFO, "...Sending *Echo to Echo within Interval($x)" ) if INFO;
-            #$ctx->send( $Input, Stella::Event->new( symbol => *Input::Echo, payload => [ $x++ ] ) );
-        }
-    );
 }
 
 # -----------------------------------------------------------------------------
@@ -81,6 +82,7 @@ my $stats = $loop->statistics;
 
 eq_or_diff($stats->{dead_letter_queue},[],'... the DeadLetterQueue is empty');
 eq_or_diff($stats->{zombies},[],'... there are no Zombie actors');
+eq_or_diff($stats->{watchers},{ r => {},w => {} },'... there are no watchers actors');
 
 done_testing();
 

@@ -44,6 +44,8 @@ class Stella::ActorRef {
         $w;
     }
 
+    method remove_watcher ($watcher) { $system->remove_watcher($watcher) }
+
     method add_timer (%args) {
         my $timer = Stella::Timer->new( %args );
         $system->schedule_timer( $timer );
