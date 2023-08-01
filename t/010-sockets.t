@@ -28,7 +28,7 @@ class Input :isa(Stella::Actor) {
         $logger->log_from( $ctx, INFO, "...got *Read" ) if INFO;
 
         my $socket = IO::Socket::SSL->new('www.google.com:443') || die 'Could not connect SSL to google';
-           $socket->print(  HTTP::Request->new( GET => '/' )->as_string );
+           $socket->print( HTTP::Request->new( GET => '/' )->as_string );
 
         my $r;
 
