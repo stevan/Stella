@@ -10,6 +10,7 @@ use Stella::ActorRef;
 use Stella::ActorSystem;
 use Stella::Timer;
 use Stella::Promise;
+use Stella::Watcher;
 
 __END__
 

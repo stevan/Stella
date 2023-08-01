@@ -5,6 +5,7 @@ use experimental 'class';
 use Stella::Timer; # also loads Interval
 use Stella::Message;
 use Stella::Promise;
+use Stella::Watcher;
 
 class Stella::ActorRef {
     use Carp 'confess';
@@ -35,6 +36,12 @@ class Stella::ActorRef {
         $message isa Stella::Message  || confess 'The `$message` arg must be a Message';
 
         $behavior->apply( $self, $message );
+    }
+
+    method add_watcher (%args) {
+        my $w = Stella::Watcher->new( %args );
+        $system->add_watcher( $w );
+        $w;
     }
 
     method add_timer (%args) {

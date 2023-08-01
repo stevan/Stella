@@ -6,11 +6,14 @@ class Stella::ActorSystem {
     use Time::HiRes 'sleep';
     use Carp        'confess';
 
+    use IO::Select;
+
     use Stella::Util::Debug;
 
     my $PIDS = 0;
 
-    field %actor_refs;        # PID to ActorRef mapping of active Actors
+    field %actor_refs;        # PID => ActorRef mapping of active Actors
+    field %watchers;          # r/w => FD => list of I/O Watcher objects
     field @callbacks;         # queue of callbacks to be run in a given tick
     field @timers;            # queue of Timer/Interval objects to run
     field @msg_queue;         # queue of message to be deliverd to actors
@@ -22,10 +25,13 @@ class Stella::ActorSystem {
     field $init :param; # function that accepts am ActorRef ($init_ctx) as its only argument
     field $init_ctx;
 
+    field $select;
     field $logger;
 
     ADJUST {
         $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+
+        $select = IO::Select->new;
     }
 
     ## ------------------------------------------------------------------------
@@ -107,34 +113,23 @@ class Stella::ActorSystem {
         ) if ERROR;
     }
 
+
     ## ------------------------------------------------------------------------
-    ## Loop Management
+    ## I/O watchers
     ## ------------------------------------------------------------------------
 
-    method next_tick ($f) {
-        ref $f eq 'CODE' || confess 'The `$f` arg must be a CODE ref';
+    method add_watcher ($watcher) {
+        $watcher isa Stella::Watcher || confess 'The `$watcher` arg must be a Watcher';
 
-        $logger->log_from( $init_ctx, DEBUG, "Adding callback for next-tick >> caller: ".(caller(2))[3] ) if DEBUG;
+        $logger->log_from( $init_ctx, DEBUG,
+            (sprintf "Adding `%s` watcher for fh(%s)" => $watcher->poll, $watcher->fh)
+        ) if DEBUG;
 
-        push @callbacks => $f;
-        return;
-    }
-
-    method run_init {
-        $init_ctx = $self->spawn( Stella::Actor->new );
-
-        $logger->log_from( $init_ctx, DEBUG, "Running init callback ...") if DEBUG;
-
-        try { $init->( $init_ctx ) }
-        catch ($e) {
-            confess "Error occurred while running init callback: $e"
-        }
-    }
-
-    method exit_loop {
-        $logger->log_from( $init_ctx, DEBUG, "Exiting loop ...") if DEBUG;
-        $self->despawn($init_ctx, 1);
-        $logger->log_from( $init_ctx, DEBUG, "Exited loop") if DEBUG;
+        # initialist structure ...
+        $watchers{ $watcher->poll }                   //= {};
+        $watchers{ $watcher->poll }->{ $watcher->fh } //= [];
+        push @{ $watchers{ $watcher->poll }->{ $watcher->fh } } => $watcher;
+        $select->add( $watcher->fh );
     }
 
     ## ------------------------------------------------------------------------
@@ -178,6 +173,7 @@ class Stella::ActorSystem {
             die "This should never happen";
         }
     }
+
 
     ## ------------------------------------------------------------------------
     ## The TICK
@@ -251,6 +247,33 @@ class Stella::ActorSystem {
     ## The main loop
     ## ------------------------------------------------------------------------
 
+    method next_tick ($f) {
+        ref $f eq 'CODE' || confess 'The `$f` arg must be a CODE ref';
+
+        $logger->log_from( $init_ctx, DEBUG, "Adding callback for next-tick >> caller: ".(caller(2))[3] ) if DEBUG;
+
+        push @callbacks => $f;
+        return;
+    }
+
+    method run_init {
+        $init_ctx = $self->spawn( Stella::Actor->new );
+
+        $logger->log_from( $init_ctx, DEBUG, "Running init callback ...") if DEBUG;
+
+        try { $init->( $init_ctx ) }
+        catch ($e) {
+            confess "Error occurred while running init callback: $e"
+        }
+    }
+
+    method exit_loop {
+        $logger->log_from( $init_ctx, DEBUG, "Exiting loop ...") if DEBUG;
+        $self->despawn($init_ctx, 1);
+        $logger->log_from( $init_ctx, DEBUG, "Exited loop") if DEBUG;
+    }
+
+
     method loop {
 
         my $now = $self->now;
@@ -276,7 +299,30 @@ class Stella::ActorSystem {
                     if ($wait > $Stella::Timer::TIMER_PRECISION_DECIMAL) {
                         # XXX - should have some kind of max-timeout here
                         $logger->line( sprintf 'wait(%f)' => $wait ) if INFO;
-                        sleep( $wait );
+                        my ($r, $w, $e) = IO::Select::select( $select, undef, undef, $wait );
+
+                        if (defined $r && @$r) {
+                            $logger->log_from( $init_ctx, DEBUG, "Got read handles") if DEBUG;
+                            foreach my $fh ( @$r ) {
+                                if ( my $ws = $watchers{r}->{ $fh } ) {
+                                    $logger->log_from( $init_ctx, DEBUG, "Found read watchers for fh($fh)") if DEBUG;
+                                    foreach my $watcher ( @$ws ) {
+                                        try { $watcher->callback->( $fh ) }
+                                        catch ($e) {
+                                            confess "Error occurred while running Watcher callback: $e"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        elsif (defined $w && @$w) {
+                            $logger->log_from( $init_ctx, DEBUG, "Got write handles") if DEBUG;
+                            die 'Should not get a writable select';
+                        }
+                        elsif (defined $e && @$e) {
+                            $logger->log_from( $init_ctx, DEBUG, "Got exception handles") if DEBUG;
+                            die 'Should not get a exception select';
+                        }
                     }
                 }
             }
@@ -300,8 +346,8 @@ class Stella::ActorSystem {
         # and then it can add these things at the
         # end.
         +{
-            dead_letter_queue => \@dead_letter_queue,
-            zombies           => [ keys %actor_refs ],
+            dead_letter_queue => [ @dead_letter_queue ],
+            zombies           => [ keys %actor_refs   ],
         }
     }
 }
