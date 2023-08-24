@@ -47,6 +47,7 @@ class Stella::Streams::Subscriber :isa(Stella::Actor) {
 
     method OnUnsubscribe ($ctx, $message) {
         $logger->log_from( $ctx, INFO, '*OnUnsubscribe called' ) if INFO;
+        $ctx->exit;
     }
 
     method OnComplete ($ctx, $message) {

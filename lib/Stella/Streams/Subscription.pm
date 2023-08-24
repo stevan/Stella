@@ -20,10 +20,10 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
     field $logger;
 
     ADJUST {
-        $publisher isa Stella::Streams::Publisher
-            || confess 'The `$publisher` param must an instance of Stella::Streams::Publisher';
-        $subscriber isa Stella::Streams::Subscriber
-            || confess 'The `$subscriber` param must an instance of Stella::Streams::Subscriber';
+        $publisher isa Stella::ActorRef && $publisher->actor isa Stella::Streams::Publisher
+            || confess 'The `$publisher` param must an instance of Stella::Streams::Publisher not '.$publisher;
+        $subscriber isa Stella::ActorRef && $subscriber->actor isa Stella::Streams::Subscriber
+            || confess 'The `$subscriber` param must an instance of Stella::Streams::Subscriber not '.$subscriber;
 
         $logger = Stella::Util::Debug->logger if LOG_LEVEL;
     }

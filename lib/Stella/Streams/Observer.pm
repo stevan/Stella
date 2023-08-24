@@ -21,7 +21,7 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
     ADJUST {
         $num_elements > 0 || confess 'The `$num_elements` param must be greater than 0';
 
-        $subscriber isa Stella::Streams::Subscriber
+        $subscriber isa Stella::ActorRef && $subscriber->actor isa Stella::Streams::Subscriber
             || confess 'The `$subscriber` param must an instance of Stella::Streams::Subscriber';
 
         $logger = Stella::Util::Debug->logger if LOG_LEVEL;
