@@ -33,7 +33,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         # type check $subscriber here and send
         # an OnError accordingly
 
-        $logger->log_from( $ctx, INFO, '*Subscribe called with ('.$subscriber->pid.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*Subscribe called with Subscriber('.$subscriber->pid.')' ) if INFO;
 
         my $subscription = $ctx->spawn(
             Stella::Streams::Subscription->new(
@@ -60,7 +60,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         # type check $subscription here and send
         # an OnError accordingly
 
-        $logger->log_from( $ctx, INFO, '*Unsubscribe called with ('.$subscription->pid.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*Unsubscribe called with Subscription('.$subscription->pid.')' ) if INFO;
 
         @subscriptions = grep $_->pid ne $subscription->pid, @subscriptions;
 
@@ -84,7 +84,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         # type check $observer here and send
         # an OnError accordingly
 
-        $logger->log_from( $ctx, INFO, '*GetNext called with ('.$observer->pid.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*GetNext called with Observer('.$observer->pid.')' ) if INFO;
 
         my $next;
         try {
@@ -102,7 +102,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         }
 
         if ( $next ) {
-            $logger->log_from( $ctx, INFO, '... *GetNext sending ('.$next.')') if INFO;
+            $logger->log_from( $ctx, INFO, '... *GetNext sending next('.$next.')') if INFO;
             $ctx->send(
                 $observer,
                 Stella::Event->new(

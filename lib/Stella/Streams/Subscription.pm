@@ -30,10 +30,10 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
 
     method Request ($ctx, $message) {
         my ($num_elements) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*Request called with ('.$num_elements.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*Request called with num_elements('.$num_elements.')' ) if INFO;
 
         if ( $observer ) {
-            $logger->log_from( $ctx, INFO, '*Request called, killing old observer ('.$observer->pid.')' ) if INFO;
+            $logger->log_from( $ctx, INFO, '*Request called, killing old Observer('.$observer->pid.')' ) if INFO;
             $ctx->kill( $observer );
         }
 

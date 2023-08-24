@@ -39,8 +39,8 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
         if ( $num_elements <= $seen ) {
             $logger->log_from( $ctx, INFO,
                 '*OnComplete observed seen('.$seen.') '
-                .'of ('.$num_elements.') '
-                .'sending *OnComplete to ('.$subscriber->pid.')'
+                .'of num_elements('.$num_elements.') '
+                .'sending *OnComplete to Subscriber('.$subscriber->pid.')'
             ) if INFO;
 
             $ctx->send(
@@ -56,7 +56,7 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
     method OnNext ($ctx, $message) {
         my ($value) = $message->event->payload->@*;
 
-        $logger->log_from( $ctx, INFO, '*OnNext observed with ('.$value.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*OnNext observed with value('.$value.')' ) if INFO;
 
         $ctx->send(
             $subscriber,
@@ -70,8 +70,8 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
         if ( $num_elements <= $seen ) {
             $logger->log_from( $ctx, INFO,
                 '*OnNext observed seen('.$seen.') '
-                .'of ('.$num_elements.') '
-                .'sending *OnRequestComplete to ('.$subscriber->pid.')'
+                .'of num_elements('.$num_elements.') '
+                .'sending *OnRequestComplete to Subscriber('.$subscriber->pid.')'
             ) if INFO;
 
             $ctx->send(
@@ -87,7 +87,7 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
 
     method OnError ($ctx, $message) {
         my ($error) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*OnError observed with ('.$error.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*OnError observed with error('.$error.')' ) if INFO;
         $ctx->send(
             $subscriber,
             Stella::Event->new(

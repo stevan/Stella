@@ -3,9 +3,9 @@ use v5.38;
 use experimental 'class';
 
 class Stella::Streams::Sink {
-    use constant DROP  => 1;
-    use constant DONE  => 2;
-    use constant DRAIN => 3;
+    use constant DROP  => \'DROP';
+    use constant DONE  => \'DONE';
+    use constant DRAIN => \'DRAIN';
 
     method drip;
     method done;

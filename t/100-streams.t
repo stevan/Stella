@@ -15,7 +15,7 @@ use Data::Dumper;
 my $LOGGER;
    $LOGGER = Stella::Util::Debug->logger if LOG_LEVEL;
 
-my $MAX_ITEMS = 20;
+my $MAX_ITEMS = 17;
 
 my $Source = Stella::Streams::Source::FromGenerator->new(
     generator => sub {
@@ -60,39 +60,34 @@ sub init ($ctx) {
         Stella::Streams::Publisher->new( source => $Source )
     );
 
-
-    my $subscriber = $ctx->spawn(
-        Stella::Streams::Subscriber->new(
-            request_size => 5,
-            sink         => $Sinks[0]
-        )
+    my @subscribers = (
+        $ctx->spawn(
+            Stella::Streams::Subscriber->new(
+                request_size => 5,
+                sink         => $Sinks[0]
+            )
+        ),
+        $ctx->spawn(
+            Stella::Streams::Subscriber->new(
+                request_size => 10,
+                sink         => $Sinks[1]
+            )
+        ),
+        $ctx->spawn(
+            Stella::Streams::Subscriber->new(
+                request_size => 2,
+                sink         => $Sinks[2]
+            )
+        ),
     );
 
     $ctx->send(
         $publisher,
         Stella::Event->new(
             symbol  => *Stella::Streams::Publisher::Subscribe,
-            payload => [ $subscriber ]
+            payload => [ $_ ]
         )
-    );
-
-#    my @subscribers = (
-#        $this->spawn( Subscriber( 5,  $Sinks[0] ) ),
-#        $this->spawn( Subscriber( 10, $Sinks[1] ) ),
-#        $this->spawn( Subscriber( 2,  $Sinks[2] ) ),
-#    );
-#
-#    # trap exits for all
-#    $_->trap( *SIGEXIT )
-#        foreach ($this, $publisher, @subscribers);
-#
-#    # link this to the publisher
-#    $this->link( $publisher );
-#    # and the publisher to the subsribers
-#    $publisher->link( $_ ) foreach @subscribers;
-#
-#
-#    $this->send( $publisher, [ *Subscribe => $_ ]) foreach @subscribers;
+    ) foreach @subscribers;
 
     $LOGGER->log_from( $ctx, INFO, '... starting' ) if INFO;
 }
@@ -101,6 +96,10 @@ my $loop = Stella::ActorSystem->new( init => \&init );
 isa_ok($loop, 'Stella::ActorSystem');
 
 $loop->loop;
+
+eq_or_diff([ $Sinks[0]->drain ], [ 1 .. 5  ], '... the sinks contrain the right items');
+eq_or_diff([ $Sinks[1]->drain ], [ 6 .. 15 ], '... the sinks contrain the right items');
+eq_or_diff([ $Sinks[2]->drain ], [ 16, 17  ], '... the sinks contrain the right items');
 
 my $stats = $loop->statistics;
 

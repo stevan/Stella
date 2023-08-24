@@ -29,7 +29,7 @@ class Stella::Streams::Subscriber :isa(Stella::Actor) {
 
     method OnSubscribe ($ctx, $message) {
         my ($s) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*OnSubscribe called with ('.$s->pid.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*OnSubscribe called with Subscription('.$s->pid.')' ) if INFO;
 
         # TODO:
         # check the type of $s here and throw an OnError
@@ -72,13 +72,13 @@ class Stella::Streams::Subscriber :isa(Stella::Actor) {
 
     method OnNext ($ctx, $message) {
         my ($value) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*OnNext called with ('.$value.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*OnNext called with value('.$value.')' ) if INFO;
         $sink->drip( $value );
     }
 
     method OnError ($ctx, $message) {
         my ($error) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*OnError called with ('.$error.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*OnError called with error('.$error.')' ) if INFO;
     }
 
     method behavior {
