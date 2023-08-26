@@ -9,10 +9,10 @@ class Stella::Util::Debug::Logger {
     our $TERM_WIDTH = (GetTerminalSize())[0];
 
     state %level_color_map = (
-        1 => "\e[38;2;100;220;250;m",
-        2 => "\e[38;2;220;180;030;m",
-        3 => "\e[38;2;220;050;070;m",
-        4 => "\e[38;2;100;200;100;m",
+        1 => "\e[96m",
+        2 => "\e[93m",
+        3 => "\e[91m",
+        4 => "\e[92m",
     );
     state %level_map = (
         1 => $level_color_map{1}.".o(INFO)\e[0m",
@@ -28,7 +28,7 @@ class Stella::Util::Debug::Logger {
 
         $fh->print(
             $level_map{ $level },
-            (sprintf " \e[48;2;%d;%d;%d;m %03d:%s \e[0m " => (
+            (sprintf " \e[20m\e[97m\e[48;2;%d;%d;%d;m %03d:%s \e[0m " => (
                 @{ $pid_to_color{ $actor_ref->pid }
                     //= [ map { (int(rand(20)) * 10) } 1,2,3 ] },
                 $actor_ref->pid,

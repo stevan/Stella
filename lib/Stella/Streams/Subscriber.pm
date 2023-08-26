@@ -8,8 +8,7 @@ use Stella::Streams::Subscription;
 
 class Stella::Streams::Subscriber :isa(Stella::Actor) {
     use Stella::Util::Debug;
-
-    use Carp 'confess';
+    use Stella::Tools::Functions;
 
     field $request_size :param;
     field $sink         :param;
@@ -36,13 +35,7 @@ class Stella::Streams::Subscriber :isa(Stella::Actor) {
         # (or better yet, make typed events)
 
         $subscription = $s;
-        $ctx->send(
-            $subscription,
-            Stella::Event->new(
-                symbol  => *Stella::Streams::Subscription::Request,
-                payload => [ $request_size ]
-            )
-        );
+        $ctx->send( $subscription, event *Stella::Streams::Subscription::Request, $request_size );
     }
 
     method OnUnsubscribe ($ctx, $message) {
@@ -53,21 +46,12 @@ class Stella::Streams::Subscriber :isa(Stella::Actor) {
     method OnComplete ($ctx, $message) {
         $logger->log_from( $ctx, INFO, '*OnComplete called' ) if INFO;
         $sink->done;
-        $ctx->send(
-            $subscription,
-            Stella::Event->new( symbol => *Stella::Streams::Subscription::Cancel )
-        );
+        $ctx->send( $subscription, event *Stella::Streams::Subscription::Cancel );
     }
 
     method OnRequestComplete ($ctx, $message) {
         $logger->log_from( $ctx, INFO, '*OnRequestComplete called' ) if INFO;
-        $ctx->send(
-            $subscription,
-            Stella::Event->new(
-                symbol  => *Stella::Streams::Subscription::Request,
-                payload => [ $request_size ]
-            )
-        );
+        $ctx->send( $subscription, event *Stella::Streams::Subscription::Request, $request_size );
     }
 
     method OnNext ($ctx, $message) {

@@ -10,8 +10,7 @@ use Stella::Streams::Observer;
 
 class Stella::Streams::Publisher :isa(Stella::Actor) {
     use Stella::Util::Debug;
-
-    use Carp 'confess';
+    use Stella::Tools::Functions;
 
     field $source :param;
 
@@ -44,13 +43,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         #$subscriber->trap( *SIGEXIT );
 
         push @subscriptions => $subscription;
-        $ctx->send(
-            $subscriber,
-            Stella::Event->new(
-                symbol  => *Stella::Streams::Subscriber::OnSubscribe,
-                payload => [ $subscription ]
-            )
-        );
+        $ctx->send( $subscriber, event *Stella::Streams::Subscriber::OnSubscribe, $subscription );
     }
 
     method Unsubscribe ($ctx, $message) {
@@ -64,10 +57,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
 
         @subscriptions = grep $_->pid ne $subscription->pid, @subscriptions;
 
-        $ctx->send(
-            $subscription,
-            Stella::Event->new( symbol  => *Stella::Streams::Subscription::OnUnsubscribe )
-        );
+        $ctx->send( $subscription, event *Stella::Streams::Subscription::OnUnsubscribe );
 
         if (scalar @subscriptions == 0) {
             $logger->log_from( $ctx, INFO, '*Unsubscribe called and no more subscrptions, exiting') if INFO;
@@ -90,32 +80,17 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         try {
             $next = $source->get_next;
         } catch ($e) {
-            $ctx->send(
-                $observer,
-                Stella::Event->new(
-                    symbol  => *Stella::Streams::Observer::OnError,
-                    payload => [ $e ]
-                )
-            );
+            $ctx->send( $observer, event *Stella::Streams::Observer::OnError, $e );
             # ???
             #return;
         }
 
         if ( $next ) {
             $logger->log_from( $ctx, INFO, '... *GetNext sending next('.$next.')') if INFO;
-            $ctx->send(
-                $observer,
-                Stella::Event->new(
-                    symbol  => *Stella::Streams::Observer::OnNext,
-                    payload => [ $next ]
-                )
-            );
+            $ctx->send( $observer, event *Stella::Streams::Observer::OnNext, $next );
         }
         else {
-            $ctx->send(
-                $observer,
-                Stella::Event->new( symbol  => *Stella::Streams::Observer::OnComplete )
-            );
+            $ctx->send( $observer, event *Stella::Streams::Observer::OnComplete );
         }
     }
 

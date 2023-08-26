@@ -9,8 +9,7 @@ use Stella::Streams::Subscriber;
 
 class Stella::Streams::Subscription :isa(Stella::Actor) {
     use Stella::Util::Debug;
-
-    use Carp 'confess';
+    use Stella::Tools::Functions;
 
     field $publisher  :param;
     field $subscriber :param;
@@ -20,9 +19,9 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
     field $logger;
 
     ADJUST {
-        $publisher isa Stella::ActorRef && $publisher->actor isa Stella::Streams::Publisher
+        actor_isa( $publisher, 'Stella::Streams::Publisher' )
             || confess 'The `$publisher` param must an instance of Stella::Streams::Publisher not '.$publisher;
-        $subscriber isa Stella::ActorRef && $subscriber->actor isa Stella::Streams::Subscriber
+        actor_isa( $subscriber, 'Stella::Streams::Subscriber' )
             || confess 'The `$subscriber` param must an instance of Stella::Streams::Subscriber not '.$subscriber;
 
         $logger = Stella::Util::Debug->logger if LOG_LEVEL;
@@ -46,35 +45,18 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
         #$observer->trap( *SIGEXIT );
 
         while ($num_elements--) {
-            $ctx->send(
-                $publisher,
-                Stella::Event->new(
-                    symbol  => *Stella::Streams::Publisher::GetNext,
-                    payload => [ $observer ]
-                )
-            );
+            $ctx->send( $publisher, event *Stella::Streams::Publisher::GetNext, $observer );
         }
     }
 
     method Cancel ($ctx, $message) {
         $logger->log_from( $ctx, INFO, '*Cancel called' ) if INFO;
-        $ctx->send(
-            $publisher,
-            Stella::Event->new(
-                symbol  => *Stella::Streams::Publisher::Unsubscribe,
-                payload => [ $ctx ]
-            )
-        );
+        $ctx->send( $publisher, event *Stella::Streams::Publisher::Unsubscribe, $ctx );
     }
 
     method OnUnsubscribe ($ctx, $message) {
         $logger->log_from( $ctx, INFO, '*OnUnsubscribe called' ) if INFO;
-        $ctx->send(
-            $subscriber,
-            Stella::Event->new(
-                symbol  => *Stella::Streams::Subscriber::OnUnsubscribe
-            )
-        );
+        $ctx->send( $subscriber, event *Stella::Streams::Subscriber::OnUnsubscribe );
         $ctx->kill( $observer );
         $ctx->exit;
     }

@@ -7,6 +7,7 @@ use Test::More;
 use Test::Differences;
 
 use ok 'Stella';
+use ok 'Stella::Tools::Functions';
 
 # -----------------------------------------------------------------------------
 # PingPong Actor
@@ -23,6 +24,7 @@ use ok 'Stella';
 class PingPong :isa(Stella::Actor) {
     use Test::More;
     use Stella::Util::Debug;
+    use Stella::Tools::Functions;
 
     field $name :param;  # so I can identify myself in the logs
     field $max  :param;  # the max number of ping/pong(s) to allow
@@ -42,7 +44,7 @@ class PingPong :isa(Stella::Actor) {
     method Ping ($ctx, $message) {
         if ($pings < $max) {
             $logger->log_from( $ctx, INFO, "...got Ping($name)[$pings] <= $max" ) if INFO;
-            $ctx->send( $message->from, Stella::Event->new( symbol => *Pong ) );
+            $ctx->send( $message->from, event *Pong );
             $pings++;
         }
         else {
@@ -54,7 +56,7 @@ class PingPong :isa(Stella::Actor) {
     method Pong ($ctx, $message) {
         if ($pongs < $max) {
             $logger->log_from( $ctx, INFO, "... got Pong($name)[$pongs] <= $max" ) if INFO;
-            $ctx->send( $message->from, Stella::Event->new( symbol => *Ping ) );
+            $ctx->send( $message->from, event *Ping );
             $pongs++;
         }
         else {
@@ -101,7 +103,7 @@ sub init ($ctx) {
         is($Ping->actor, $ping, '... the actor ref has the right actor');
         is($Pong->actor, $pong, '... the actor ref has the right actor');
 
-        $Ping->send( $Pong, Stella::Event->new( symbol => *PingPong::Pong ) );
+        $Ping->send( $Pong, event *PingPong::Pong );
 
         pass('... starting test');
     }

@@ -7,8 +7,7 @@ use Stella::Streams::Subscriber;
 
 class Stella::Streams::Observer :isa(Stella::Actor) {
     use Stella::Util::Debug;
-
-    use Carp 'confess';
+    use Stella::Tools::Functions;
 
     field $num_elements :param;
     field $subscriber   :param;
@@ -21,7 +20,7 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
     ADJUST {
         $num_elements > 0 || confess 'The `$num_elements` param must be greater than 0';
 
-        $subscriber isa Stella::ActorRef && $subscriber->actor isa Stella::Streams::Subscriber
+        actor_isa( $subscriber, 'Stella::Streams::Subscriber' )
             || confess 'The `$subscriber` param must an instance of Stella::Streams::Subscriber';
 
         $logger = Stella::Util::Debug->logger if LOG_LEVEL;
@@ -43,12 +42,7 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
                 .'sending *OnComplete to Subscriber('.$subscriber->pid.')'
             ) if INFO;
 
-            $ctx->send(
-                $subscriber,
-                Stella::Event->new(
-                    symbol => *Stella::Streams::Subscriber::OnComplete
-                )
-            );
+            $ctx->send( $subscriber, event *Stella::Streams::Subscriber::OnComplete );
             $seen = 0;
         }
     }
@@ -58,13 +52,7 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
 
         $logger->log_from( $ctx, INFO, '*OnNext observed with value('.$value.')' ) if INFO;
 
-        $ctx->send(
-            $subscriber,
-            Stella::Event->new(
-                symbol  => *Stella::Streams::Subscriber::OnNext,
-                payload => [ $value ]
-            )
-        );
+        $ctx->send( $subscriber, event *Stella::Streams::Subscriber::OnNext, $value );
 
         $seen++;
         if ( $num_elements <= $seen ) {
@@ -74,12 +62,7 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
                 .'sending *OnRequestComplete to Subscriber('.$subscriber->pid.')'
             ) if INFO;
 
-            $ctx->send(
-                $subscriber,
-                Stella::Event->new(
-                    symbol => *Stella::Streams::Subscriber::OnRequestComplete
-                )
-            );
+            $ctx->send( $subscriber, event *Stella::Streams::Subscriber::OnRequestComplete );
             $seen = 0;
             $done = 1;
         }
@@ -88,13 +71,7 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
     method OnError ($ctx, $message) {
         my ($error) = $message->event->payload->@*;
         $logger->log_from( $ctx, INFO, '*OnError observed with error('.$error.')' ) if INFO;
-        $ctx->send(
-            $subscriber,
-            Stella::Event->new(
-                symbol  => *Stella::Streams::Subscriber::OnError,
-                payload => [ $error ]
-            )
-        );
+        $ctx->send( $subscriber, event *Stella::Streams::Subscriber::OnError, $error );
     }
 
     method behavior {

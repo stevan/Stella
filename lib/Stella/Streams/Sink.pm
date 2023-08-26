@@ -13,7 +13,7 @@ class Stella::Streams::Sink {
 }
 
 class Stella::Streams::Sink::ToCallback :isa(Stella::Streams::Sink) {
-    use Carp 'confess';
+    use Stella::Tools::Functions 'confess';
 
     field $callback :param;
 

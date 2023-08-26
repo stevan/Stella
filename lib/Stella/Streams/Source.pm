@@ -7,7 +7,7 @@ class Stella::Streams::Source {
 }
 
 class Stella::Streams::Source::FromList :isa(Stella::Streams::Source) {
-    use Carp 'confess';
+    use Stella::Tools::Functions 'confess';
 
     field $list :param;
 
@@ -19,7 +19,7 @@ class Stella::Streams::Source::FromList :isa(Stella::Streams::Source) {
 }
 
 class Stella::Streams::Source::FromGenerator :isa(Stella::Streams::Source) {
-    use Carp 'confess';
+    use Stella::Tools::Functions 'confess';
 
     field $generator :param;
 
