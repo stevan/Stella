@@ -7,7 +7,7 @@ use Test::More;
 use Test::Differences;
 
 use ok 'Stella';
-use ok 'Stella::Tools::Functions';
+use ok 'Stella::Tools', ':events';
 
 # -----------------------------------------------------------------------------
 # PingPong Actor
@@ -23,8 +23,7 @@ use ok 'Stella::Tools::Functions';
 
 class PingPong :isa(Stella::Actor) {
     use Test::More;
-    use Stella::Tools::Debug;
-    use Stella::Tools::Functions;
+    use Stella::Tools qw[ :events :debug ];
 
     field $name :param;  # so I can identify myself in the logs
     field $max  :param;  # the max number of ping/pong(s) to allow

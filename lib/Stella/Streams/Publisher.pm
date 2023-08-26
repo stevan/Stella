@@ -9,8 +9,9 @@ use Stella::Streams::Subscriber;
 use Stella::Streams::Observer;
 
 class Stella::Streams::Publisher :isa(Stella::Actor) {
-    use Stella::Tools::Debug;
-    use Stella::Tools::Functions;
+    use Carp 'confess';
+
+    use Stella::Tools qw[ :core :events :debug ];
 
     field $source :param;
 

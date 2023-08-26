@@ -2,10 +2,12 @@
 use v5.38;
 use experimental 'class';
 
-use Stella::Timer; # also loads Interval
-use Stella::Message;
-use Stella::Promise;
-use Stella::Watcher;
+use Stella::Core::Message;
+
+use Stella::Core::Timer; # loads Interval
+use Stella::Core::Watcher;
+
+use Stella::Core::Promise;
 
 class Stella::ActorRef {
     use Carp 'confess';
@@ -19,7 +21,7 @@ class Stella::ActorRef {
     ADJUST {
         defined $pid                    || confess 'The `$pid` param must defined value';
         $system isa Stella::ActorSystem || confess 'The `$system` param must be an ActorSystem';
-        $actor  isa Stella::Actor       || confess 'The `$actor` param must be an Actor';
+        $actor  isa Stella::Actor || confess 'The `$actor` param must be an Actor';
 
         $behavior = $actor->behavior;
     }
@@ -28,18 +30,18 @@ class Stella::ActorRef {
     method system { $system }
     method actor  { $actor  }
 
-    method promise { Stella::Promise->new( system => $system ) }
+    method promise { Stella::Core::Promise->new( system => $system ) }
 
     method next_tick ($f) { $system->next_tick( $f ) }
 
     method apply ($message) {
-        $message isa Stella::Message  || confess 'The `$message` arg must be a Message';
+        $message isa Stella::Core::Message  || confess 'The `$message` arg must be a Message';
 
         $behavior->apply( $self, $message );
     }
 
     method add_watcher (%args) {
-        my $w = Stella::Watcher->new( %args );
+        my $w = Stella::Core::Watcher->new( %args );
         $system->add_watcher( $w );
         $w;
     }
@@ -47,13 +49,13 @@ class Stella::ActorRef {
     method remove_watcher ($watcher) { $system->remove_watcher($watcher) }
 
     method add_timer (%args) {
-        my $timer = Stella::Timer->new( %args );
+        my $timer = Stella::Core::Timer->new( %args );
         $system->schedule_timer( $timer );
         return $timer;
     }
 
     method add_interval (%args) {
-        my $timer = Stella::Timer::Interval->new( %args );
+        my $timer = Stella::Core::Timer::Interval->new( %args );
         $system->schedule_timer( $timer );
         return $timer;
     }
@@ -69,7 +71,7 @@ class Stella::ActorRef {
         $event isa Stella::Event    || confess 'The `$event` arg must be an Event';
 
         $system->enqueue_message(
-            Stella::Message->new( to => $to, from => $self, event => $event )
+            Stella::Core::Message->new( to => $to, from => $self, event => $event )
         );
     }
 

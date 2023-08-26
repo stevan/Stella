@@ -6,8 +6,9 @@ use Stella;
 use Stella::Streams::Subscriber;
 
 class Stella::Streams::Observer :isa(Stella::Actor) {
-    use Stella::Tools::Debug;
-    use Stella::Tools::Functions;
+    use Carp 'confess';
+
+    use Stella::Tools qw[ :core :events :debug ];
 
     field $num_elements :param;
     field $subscriber   :param;

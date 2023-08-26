@@ -2,7 +2,7 @@
 use v5.38;
 use experimental 'class';
 
-class Stella::Timer {
+class Stella::Core::Timer {
     use Carp 'confess';
 
     our $TIMER_PRECISION_DECIMAL = 0.001;
@@ -32,7 +32,7 @@ class Stella::Timer {
     }
 }
 
-class Stella::Timer::Interval :isa(Stella::Timer) {}
+class Stella::Core::Timer::Interval :isa(Stella::Core::Timer) {}
 
 __END__
 
@@ -42,7 +42,7 @@ __END__
 
 =head1 NAME
 
-Stella::Timer
+Stella::Core::Timer
 
 =head1 DESCRIPTION
 

@@ -2,7 +2,7 @@
 use v5.38;
 use experimental 'class', 'try';
 
-class Stella::Promise {
+class Stella::Core::Promise {
     use Carp 'confess';
 
     use constant IN_PROGRESS => 'in progress';
@@ -46,7 +46,7 @@ class Stella::Promise {
                 $p->reject( $error );
             }
 
-            if ( $result isa Stella::Promise ) {
+            if ( $result isa Stella::Core::Promise ) {
                 $result->then(
                     sub { $p->resolve(@_); () },
                     sub { $p->reject(@_);  () },

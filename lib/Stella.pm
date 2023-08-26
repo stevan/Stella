@@ -1,16 +1,17 @@
 package Stella;
 use v5.38;
 
-use Stella::Event;
-use Stella::Message;
-use Stella::Behavior;
-use Stella::Behavior::Method;
 use Stella::Actor;
+use Stella::Event;
+use Stella::Core::Message;
+use Stella::Behavior;
+use Stella::Core::Timer; # loads Interval
+use Stella::Core::Watcher;
+
 use Stella::ActorRef;
 use Stella::ActorSystem;
-use Stella::Timer;
-use Stella::Promise;
-use Stella::Watcher;
+
+use Stella::Behavior::Method;
 
 __END__
 

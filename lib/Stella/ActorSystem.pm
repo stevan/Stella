@@ -42,7 +42,7 @@ class Stella::ActorSystem {
     ## ------------------------------------------------------------------------
 
     method spawn ($actor) {
-        $actor isa Stella::Actor || confess 'The `$actor` arg must be an Actor';
+        $actor isa Stella::Actor || confess 'The `$actor` arg must be an Stella::Actor';
 
         my $a = Stella::ActorRef->new( pid => ++$PIDS, system => $self, actor => $actor );
         $actor_refs{ $a->pid } = $a;
@@ -86,7 +86,7 @@ class Stella::ActorSystem {
     ## ------------------------------------------------------------------------
 
     method enqueue_message ($message) {
-        $message isa Stella::Message || confess 'The `$message` arg must be a Message';
+        $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
 
         $logger->log_from(
             $init_ctx, DEBUG,
@@ -122,7 +122,7 @@ class Stella::ActorSystem {
     ## ------------------------------------------------------------------------
 
     method add_watcher ($watcher) {
-        $watcher isa Stella::Watcher || confess 'The `$watcher` arg must be a Watcher';
+        $watcher isa Stella::Core::Watcher || confess 'The `$watcher` arg must be a Watcher';
 
         $logger->log_from( $init_ctx, DEBUG,
             (sprintf "Adding `%s` watcher for fh(%s)" => $watcher->poll, $watcher->fh)
@@ -139,7 +139,7 @@ class Stella::ActorSystem {
     }
 
     method remove_watcher ($watcher) {
-        $watcher isa Stella::Watcher || confess 'The `$watcher` arg must be a Watcher';
+        $watcher isa Stella::Core::Watcher || confess 'The `$watcher` arg must be a Watcher';
 
         my ($poll, $fh) = ($watcher->poll, $watcher->fh);
 
@@ -234,7 +234,7 @@ class Stella::ActorSystem {
                         die "Timer callback failed ($timer) because: $e";
                     }
                     push @intervals => $t
-                        if $t isa Stella::Timer::Interval
+                        if $t isa Stella::Core::Timer::Interval
                         && !$t->cancelled;
                 }
             }
@@ -347,7 +347,7 @@ class Stella::ActorSystem {
                     my $wait = ($next_timer->[0] - $time);
 
                     # do not wait for negative values ...
-                    if ($wait > $Stella::Timer::TIMER_PRECISION_DECIMAL) {
+                    if ($wait > $Stella::Core::Timer::TIMER_PRECISION_DECIMAL) {
 
                         # XXX - should have some kind of max-timeout here
                         $logger->line( sprintf 'wait(%f)' => $wait ) if INFO;
@@ -450,7 +450,7 @@ The L<Stella::ActorSystem> does a number of things:
 
 =item it manages L<Stella::ActorRef> instances of spawned L<Stella::Actors>
 
-=item it handles the L<Stella::Message> delivery queue
+=item it handles the L<Stella::Core::Message> delivery queue
 
 =item it manages the loop within which the L<Stella::Actor> instances live
 

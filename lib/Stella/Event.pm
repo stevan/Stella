@@ -32,6 +32,6 @@ Stella::Event
 A L<Stella::Event> can thought of as a deffered method call. The C<$symbol> being
 the name of the method, and the C<$payload> being a list of arguments to the method.
 
-An L<Stella::Event> is the primary payload of the L<Stella::Message> object.
+An L<Stella::Event> is the primary payload of the L<Stella::Core::Message> object.
 
 =cut

@@ -8,8 +8,9 @@ use Stella::Streams::Publisher;
 use Stella::Streams::Subscriber;
 
 class Stella::Streams::Subscription :isa(Stella::Actor) {
-    use Stella::Tools::Debug;
-    use Stella::Tools::Functions;
+    use Carp 'confess';
+
+    use Stella::Tools qw[ :core :events :debug ];
 
     field $publisher  :param;
     field $subscriber :param;

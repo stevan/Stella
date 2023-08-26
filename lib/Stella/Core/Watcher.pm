@@ -2,7 +2,7 @@
 use v5.38;
 use experimental 'class';
 
-class Stella::Watcher {
+class Stella::Core::Watcher {
     use Carp 'confess';
 
     field $fh       :param;
@@ -28,7 +28,7 @@ __END__
 
 =head1 NAME
 
-Stella::Watcher
+Stella::Core::Watcher
 
 =head1 DESCRIPTION
 

@@ -7,8 +7,9 @@ use Stella::Streams::Sink;
 use Stella::Streams::Subscription;
 
 class Stella::Streams::Subscriber :isa(Stella::Actor) {
-    use Stella::Tools::Debug;
-    use Stella::Tools::Functions;
+    use Carp 'confess';
+
+    use Stella::Tools qw[ :core :events :debug ];
 
     field $request_size :param;
     field $sink         :param;

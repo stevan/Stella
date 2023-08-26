@@ -70,7 +70,7 @@ sub init ($ctx) {
     isa_ok($Service, 'Stella::ActorRef');
 
     my $promise = $ctx->promise;
-    isa_ok($promise, 'Stella::Promise');
+    isa_ok($promise, 'Stella::Core::Promise');
 
     $ctx->send( $Service,
         Stella::Event->new(

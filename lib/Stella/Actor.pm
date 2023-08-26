@@ -23,8 +23,8 @@ Stella::Actor
 
 =head1 DESCRIPTION
 
-The base L<Stella::Actor>, it will attempt to apply a L<Stella::Message> by
-looking up the L<Stella::Message> event's symbol. In this case, the
+The base L<Stella::Actor>, it will attempt to apply a L<Stella::Core::Message> by
+looking up the L<Stella::Core::Message> event's symbol. In this case, the
 L<Stella::Actor> will look for a method of the same name within it's
 dispatch table.
 
