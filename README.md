@@ -23,7 +23,7 @@ The `STELLA_LOG` value can be set to 1 (`INFO`), 2 (`WARN`), 3 (`ERROR`), 4 (`DE
 use Stella;
 
 class PingPong :isa(Stella::Actor) {
-    use Stella::Util::Debug; # import LOG_LEVEL, INFO, WARN, etc.
+    use Stella::Tools::Debug; # import LOG_LEVEL, INFO, WARN, etc.
 
     field $name :param;  # so I can identify myself in the logs
     field $max  :param;  # the max number of ping/pong(s) to allow
@@ -36,7 +36,7 @@ class PingPong :isa(Stella::Actor) {
 
     ADJUST {
         # create a logger if logging is enabled
-        $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+        $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
     }
 
     my sub _exit_both ($ctx, $a) {  $ctx->exit; $ctx->kill( $a ) }

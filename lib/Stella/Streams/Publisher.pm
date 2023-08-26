@@ -9,7 +9,7 @@ use Stella::Streams::Subscriber;
 use Stella::Streams::Observer;
 
 class Stella::Streams::Publisher :isa(Stella::Actor) {
-    use Stella::Util::Debug;
+    use Stella::Tools::Debug;
     use Stella::Tools::Functions;
 
     field $source :param;
@@ -22,7 +22,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         $source isa Stella::Streams::Source
             || confess 'The `$source` param must an instance of Stella::Streams::Source';
 
-        $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+        $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
     }
 
     method Subscribe ($ctx, $message) {

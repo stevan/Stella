@@ -1,7 +1,7 @@
-package Stella::Util::Debug;
+package Stella::Tools::Debug;
 use v5.38;
 
-use Stella::Util::Debug::Logger;
+use Stella::Tools::Debug::Logger;
 
 use constant LOG_LEVEL => $ENV{STELLA_DEBUG} ? 4 : ($ENV{STELLA_LOG} // 0);
 
@@ -22,7 +22,7 @@ our @EXPORT = qw[
 ];
 
 sub logger ($class, @args) {
-    state $logger = Stella::Util::Debug::Logger->new( @args )
+    state $logger = Stella::Tools::Debug::Logger->new( @args )
 }
 
 __END__
@@ -33,7 +33,7 @@ __END__
 
 =head1 NAME
 
-Stella::Util::Debug
+Stella::Tools::Debug
 
 =head1 DESCRIPTION
 

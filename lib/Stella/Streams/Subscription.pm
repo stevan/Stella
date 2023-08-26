@@ -8,7 +8,7 @@ use Stella::Streams::Publisher;
 use Stella::Streams::Subscriber;
 
 class Stella::Streams::Subscription :isa(Stella::Actor) {
-    use Stella::Util::Debug;
+    use Stella::Tools::Debug;
     use Stella::Tools::Functions;
 
     field $publisher  :param;
@@ -24,7 +24,7 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
         actor_isa( $subscriber, 'Stella::Streams::Subscriber' )
             || confess 'The `$subscriber` param must an instance of Stella::Streams::Subscriber not '.$subscriber;
 
-        $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+        $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
     }
 
     method Request ($ctx, $message) {

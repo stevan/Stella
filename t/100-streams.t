@@ -8,12 +8,12 @@ use Test::Differences;
 
 use ok 'Stella';
 use ok 'Stella::Streams';
-use ok 'Stella::Util::Debug';
+use ok 'Stella::Tools::Debug';
 
 use Data::Dumper;
 
 my $LOGGER;
-   $LOGGER = Stella::Util::Debug->logger if LOG_LEVEL;
+   $LOGGER = Stella::Tools::Debug->logger if LOG_LEVEL;
 
 my $MAX_ITEMS = 17;
 

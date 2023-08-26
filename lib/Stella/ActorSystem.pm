@@ -9,7 +9,7 @@ class Stella::ActorSystem {
     use builtin qw[ blessed refaddr ];
     use IO::Select;
 
-    use Stella::Util::Debug;
+    use Stella::Tools::Debug;
 
     my $PIDS = 0;
 
@@ -30,7 +30,7 @@ class Stella::ActorSystem {
     field $logger;
 
     ADJUST {
-        $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+        $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
         # set up the I/O stuff
         $select   = IO::Select->new;

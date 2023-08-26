@@ -7,18 +7,18 @@ use Test::More;
 use Test::Differences;
 
 use ok 'Stella';
-use ok 'Stella::Util::Debug';
+use ok 'Stella::Tools::Debug';
 
 # ...
 
 class Input :isa(Stella::Actor) {
     use Test::More;
-    use Stella::Util::Debug;
+    use Stella::Tools::Debug;
 
     field $logger;
 
     ADJUST {
-        $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+        $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
     }
 
     method Read ($ctx, $message) {
@@ -59,7 +59,7 @@ class Input :isa(Stella::Actor) {
 
 sub init ($ctx) {
 
-    my $logger; $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+    my $logger; $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
     my $Input = $ctx->spawn( Input->new );
     isa_ok($Input, 'Stella::ActorRef');

@@ -9,14 +9,14 @@ use Test::More;
 use Test::Differences;
 
 use ok 'Stella';
-use ok 'Stella::Util::Debug';
+use ok 'Stella::Tools::Debug';
 
 # ...
 
 
 sub init ($ctx) {
 
-    my $logger; $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+    my $logger; $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
     # wait for the results ...
     $ctx->next_tick(sub {

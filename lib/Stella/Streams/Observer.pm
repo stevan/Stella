@@ -6,7 +6,7 @@ use Stella;
 use Stella::Streams::Subscriber;
 
 class Stella::Streams::Observer :isa(Stella::Actor) {
-    use Stella::Util::Debug;
+    use Stella::Tools::Debug;
     use Stella::Tools::Functions;
 
     field $num_elements :param;
@@ -23,7 +23,7 @@ class Stella::Streams::Observer :isa(Stella::Actor) {
         actor_isa( $subscriber, 'Stella::Streams::Subscriber' )
             || confess 'The `$subscriber` param must an instance of Stella::Streams::Subscriber';
 
-        $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+        $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
     }
 
     method OnComplete ($ctx, $message) {

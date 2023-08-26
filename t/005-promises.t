@@ -9,19 +9,19 @@ use Test::More;
 use Test::Differences;
 
 use ok 'Stella';
-use ok 'Stella::Util::Debug';
+use ok 'Stella::Tools::Debug';
 
 # ...
 
 class Service :isa(Stella::Actor) {
     use Test::More;
-    use Stella::Util::Debug;
+    use Stella::Tools::Debug;
     use Data::Dumper;
 
     field $logger;
 
     ADJUST {
-        $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+        $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
     }
 
     method Request ($ctx, $message) {
@@ -64,7 +64,7 @@ class Service :isa(Stella::Actor) {
 
 sub init ($ctx) {
 
-    my $logger; $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+    my $logger; $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
     my $Service = $ctx->spawn( Service->new );
     isa_ok($Service, 'Stella::ActorRef');

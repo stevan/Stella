@@ -7,7 +7,7 @@ use Stella::Streams::Sink;
 use Stella::Streams::Subscription;
 
 class Stella::Streams::Subscriber :isa(Stella::Actor) {
-    use Stella::Util::Debug;
+    use Stella::Tools::Debug;
     use Stella::Tools::Functions;
 
     field $request_size :param;
@@ -23,7 +23,7 @@ class Stella::Streams::Subscriber :isa(Stella::Actor) {
         $sink isa Stella::Streams::Sink
             || confess 'The `$sink` param must an instance of Stella::Streams::Sink';
 
-        $logger = Stella::Util::Debug->logger if LOG_LEVEL;
+        $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
     }
 
     method OnSubscribe ($ctx, $message) {

@@ -3,7 +3,7 @@ use v5.38;
 use experimental 'class', 'builtin';
 use builtin 'blessed';
 
-class Stella::Util::Debug::Logger {
+class Stella::Tools::Debug::Logger {
     use Term::ReadKey qw[ GetTerminalSize ];
 
     our $TERM_WIDTH = (GetTerminalSize())[0];
@@ -61,7 +61,7 @@ __END__
 
 =head1 NAME
 
-Stella::Util::Debug::Logger
+Stella::Tools::Debug::Logger
 
 =head1 DESCRIPTION
 
