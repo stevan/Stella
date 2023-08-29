@@ -21,7 +21,7 @@ class Stella::ActorRef {
     ADJUST {
         defined $pid                    || confess 'The `$pid` param must defined value';
         $system isa Stella::ActorSystem || confess 'The `$system` param must be an ActorSystem';
-        $actor  isa Stella::Actor || confess 'The `$actor` param must be an Actor';
+        $actor  isa Stella::Actor       || confess 'The `$actor` param must be an Actor';
 
         $behavior = $actor->behavior;
     }

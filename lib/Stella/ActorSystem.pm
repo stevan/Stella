@@ -23,7 +23,7 @@ class Stella::ActorSystem {
     field $time = 0; # the current time, using Time::HiRes
     field $tick = 0; # the current tick of the loop
 
-    field $init :param; # function that accepts am ActorRef ($init_ctx) as its only argument
+    field $init :param; # function that accepts an ActorRef ($init_ctx) as its only argument
     field $init_ctx;
 
     field $select;

@@ -17,9 +17,15 @@ __END__
 
 =head1 NAME
 
-Stella::Streams
+Stella::Streams - Reactive Streams for Stella
 
 =head1 DESCRIPTION
+
+This is an implementation of the Reactive Streams API use the Stella Actor System.
+
+=head1 SEE ALSO
+
+L<docs/STREAMS.md>
 
 =cut
 
