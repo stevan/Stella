@@ -6,7 +6,7 @@ use Stella;
 use Stella::Streams::Source;
 use Stella::Streams::Subscription;
 use Stella::Streams::Subscriber;
-use Stella::Streams::Observer;
+use Stella::Streams::Observer::Subscription;
 
 class Stella::Streams::Publisher :isa(Stella::Actor) {
     use Carp 'confess';

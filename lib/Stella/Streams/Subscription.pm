@@ -3,7 +3,7 @@ use v5.38;
 use experimental 'class';
 
 use Stella;
-use Stella::Streams::Observer;
+use Stella::Streams::Observer::Subscription;
 use Stella::Streams::Publisher;
 use Stella::Streams::Subscriber;
 
@@ -38,7 +38,7 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
         }
 
         $observer = $ctx->spawn(
-            Stella::Streams::Observer->new(
+            Stella::Streams::Observer::Subscription->new(
                 num_elements => $num_elements,
                 subscriber   => $subscriber
             )
