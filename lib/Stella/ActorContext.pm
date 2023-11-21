@@ -30,7 +30,7 @@ class Stella::ActorContext {
     method actor_ref { $actor_ref }
 
     method to_string {
-        $actor_ref->to_string;
+        $actor_ref->to_string.'.Context';
     }
 
     method promise { Stella::Core::Promise->new( system => $actor_ref->system ) }
