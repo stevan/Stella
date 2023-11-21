@@ -37,7 +37,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
 
         my $subscription = $ctx->spawn(
             Stella::Streams::Subscription->new(
-                publisher  => $ctx,
+                publisher  => $ctx->actor_ref,
                 subscriber => $subscriber
             )
         );

@@ -40,6 +40,12 @@ class PingPong :isa(Stella::Actor) {
 
     my sub _exit_both ($ctx, $a) {  $ctx->exit; $ctx->kill( $a ) }
 
+    method Start ($ctx, $message) {
+        my ($Other) = $message->event->payload->@*;
+
+        $ctx->send( $Other, event *Ping );
+    }
+
     method Ping ($ctx, $message) {
         if ($pings < $max) {
             $logger->log_from( $ctx, INFO, "...got Ping($name)[$pings] <= $max" ) if INFO;
@@ -65,7 +71,7 @@ class PingPong :isa(Stella::Actor) {
     }
 
     method behavior {
-        Stella::Behavior::Method->new( allowed => [ *Ping, *Pong ] );
+        Stella::Behavior::Method->new( allowed => [ *Start, *Ping, *Pong ] );
     }
 }
 
@@ -102,7 +108,7 @@ sub init ($ctx) {
         is($Ping->actor, $ping, '... the actor ref has the right actor');
         is($Pong->actor, $pong, '... the actor ref has the right actor');
 
-        $Ping->send( $Pong, event *PingPong::Pong );
+        $ctx->send( $Ping, event *PingPong::Start, $Pong );
 
         pass('... starting test');
     }

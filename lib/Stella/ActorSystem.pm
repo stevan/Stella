@@ -300,7 +300,7 @@ class Stella::ActorSystem {
 
         $logger->log_from( $init_ctx, DEBUG, "Running init callback ...") if DEBUG;
 
-        try { $init->( $init_ctx ) }
+        try { $init->( Stella::ActorContext->new( actor_ref => $init_ctx ) ) }
         catch ($e) {
             confess "Error occurred while running init callback: $e"
         }

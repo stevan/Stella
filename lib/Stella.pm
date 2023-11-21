@@ -9,6 +9,7 @@ use Stella::Core::Timer; # loads Interval
 use Stella::Core::Watcher;
 
 use Stella::ActorRef;
+use Stella::ActorContext;
 use Stella::ActorSystem;
 
 use Stella::Behavior::Method;
