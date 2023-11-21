@@ -29,7 +29,7 @@ class Stella::Streams::Subscriber :isa(Stella::Actor) {
 
     method OnSubscribe ($ctx, $message) {
         my ($s) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*OnSubscribe called with Subscription('.$s->pid.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*OnSubscribe called with Subscription('.$s.')' ) if INFO;
 
         # TODO:
         # check the type of $s here and throw an OnError

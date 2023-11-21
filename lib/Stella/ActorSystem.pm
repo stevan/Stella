@@ -49,7 +49,7 @@ class Stella::ActorSystem {
 
         $logger->log_from(
             $init_ctx, DEBUG,
-            (sprintf "Spawning ACTOR(%s) PID(%d) REF(%s)" => "$actor", $a->pid, "$a"),
+            (sprintf "Spawning ACTOR(%s) REF(%s)" => "$actor", "$a"),
             " >> caller: ".(caller(2))[3]
         ) if DEBUG && $init_ctx;
 
@@ -61,12 +61,12 @@ class Stella::ActorSystem {
 
         $logger->log_from(
             $init_ctx, DEBUG,
-            (sprintf "Request despawning of REF(%s) PID(%d)" => "$actor_ref", $actor_ref->pid),
+            (sprintf "Request despawning of REF(%s)" => "$actor_ref"),
             " >> caller: ".(caller(2))[3]
         ) if DEBUG;
 
         if ($immediate) {
-            $logger->log_from( $init_ctx, DEBUG, "Immediate!! Despawning REF($actor_ref) PID(".$actor_ref->pid.")") if DEBUG;
+            $logger->log_from( $init_ctx, DEBUG, "Immediate!! Despawning REF($actor_ref)") if DEBUG;
             delete $actor_refs{ $actor_ref->pid };
         }
         else {
@@ -75,7 +75,7 @@ class Stella::ActorSystem {
             # is done as soon as possible after
             # this tick
             unshift @callbacks => sub {
-                $logger->log_from( $init_ctx, DEBUG, "... Despawning REF($actor_ref) PID(".$actor_ref->pid.")") if DEBUG;
+                $logger->log_from( $init_ctx, DEBUG, "... Despawning REF($actor_ref)") if DEBUG;
                 delete $actor_refs{ $actor_ref->pid };
             };
         }
@@ -95,9 +95,9 @@ class Stella::ActorSystem {
         $logger->log_from(
             $init_ctx, DEBUG,
             (sprintf "Enqueue Message TO(%s) FROM(%s) EVENT(%s)" =>
-                $message->to->pid,
-                $message->from->pid,
-                $message->event->symbol,
+                $message->to,
+                $message->from,
+                $message->event,
             ),
             " >> caller: ".(caller(2))[3]
         ) if DEBUG;

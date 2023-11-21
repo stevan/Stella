@@ -39,7 +39,7 @@ class Stella::Streams::Observer::Subscription :isa(Stella::Streams::Observer) {
             $logger->log_from( $ctx, INFO,
                 '*OnComplete observed seen('.$seen.') '
                 .'of num_elements('.$num_elements.') '
-                .'sending *OnComplete to Subscriber('.$subscriber->pid.')'
+                .'sending *OnComplete to Subscriber('.$subscriber.')'
             ) if INFO;
 
             $ctx->send( $subscriber, event *Stella::Streams::Subscriber::OnComplete );
@@ -59,7 +59,7 @@ class Stella::Streams::Observer::Subscription :isa(Stella::Streams::Observer) {
             $logger->log_from( $ctx, INFO,
                 '*OnNext observed seen('.$seen.') '
                 .'of num_elements('.$num_elements.') '
-                .'sending *OnRequestComplete to Subscriber('.$subscriber->pid.')'
+                .'sending *OnRequestComplete to Subscriber('.$subscriber.')'
             ) if INFO;
 
             $ctx->send( $subscriber, event *Stella::Streams::Subscriber::OnRequestComplete );

@@ -33,7 +33,7 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
         $logger->log_from( $ctx, INFO, '*Request called with num_elements('.$num_elements.')' ) if INFO;
 
         if ( $observer ) {
-            $logger->log_from( $ctx, INFO, '*Request called, killing old Observer('.$observer->pid.')' ) if INFO;
+            $logger->log_from( $ctx, INFO, '*Request called, killing old Observer('.$observer.')' ) if INFO;
             $ctx->kill( $observer );
         }
 

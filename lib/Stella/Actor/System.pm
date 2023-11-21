@@ -24,15 +24,15 @@ class Stella::Actor::System :isa(Stella::Actor) {
 
     method Kill ($ctx, $message) {
         my ($actor_ref) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*Kill called with ActorRef('.$actor_ref->pid.')' ) if INFO;
+        $logger->log_from( $ctx, INFO, '*Kill called with ActorRef('.$actor_ref.')' ) if INFO;
 
         $ctx->kill( $actor_ref );
     }
 
     method Send ($ctx, $message) {
         my ($to, $from, $event) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*Send called with To('.$to->pid.')'.
-                                       ' From('.$from->pid.')'.
+        $logger->log_from( $ctx, INFO, '*Send called with To('.$to.')'.
+                                       ' From('.$from.')'.
                                        ' Event('.$event.')' ) if INFO;
 
         $ctx->system->enqueue_message(

@@ -5,6 +5,11 @@ use experimental 'class';
 class Stella::Event {
     use Carp 'confess';
 
+    use overload (
+        fallback => 1,
+        '""' => \&to_string,
+    );
+
     field $symbol  :param;
     field $payload :param = [];
 
@@ -15,6 +20,10 @@ class Stella::Event {
 
     method symbol  { $symbol  }
     method payload { $payload }
+
+    method to_string {
+        sprintf '%s => (%s)' => $symbol, join ', ' => @$payload;
+    }
 }
 
 __END__
