@@ -1,15 +1,20 @@
 
 ## Remote Actors
 
-- ActorSystem has a mailbox
-    - Mailbox handles:
-        - send_message
-        - drain_messages
-        - dead_letter_queue
+- Mailbox needs an outgoing queue
+    - if a message is not local, it goes here
 
 - Mailbox can register watchers on file handles
     - for outside input (read)
     - for sending output (write)
+
+- The read watcher will read messages
+    - decode messages
+        - add messages to the local queue
+
+- The write watcher will write messages
+    - encode each message
+        - write them to the output
 
 
 ## Linked Actors

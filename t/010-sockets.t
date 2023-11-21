@@ -31,18 +31,7 @@ class Input :isa(Stella::Actor) {
            $socket->print( HTTP::Request->new( GET => '/' )->as_string );
 
         my $r;
-
-        $logger->log_from( $ctx, INFO, "... Setting (30)s timeout while waiting on Socket " ) if INFO;
-        my $t = $ctx->add_timer(
-            timeout  => 30,
-            callback => sub {
-                $logger->log_from( $ctx, INFO, "... Timed out waiting for Socket" ) if INFO;
-                fail('... unable to get response after 30(s)');
-                $ctx->remove_watcher( $r );
-                $ctx->exit;
-                $socket->close;
-            }
-        );
+        my $t;
 
         $r = $ctx->add_watcher(
             fh       => $socket,
@@ -54,6 +43,18 @@ class Input :isa(Stella::Actor) {
                 $ctx->remove_watcher( $r );
                 $ctx->exit;
                 $t->cancel;
+                $socket->close;
+            }
+        );
+
+        $logger->log_from( $ctx, INFO, "... Setting (30)s timeout while waiting on Socket " ) if INFO;
+        $t = $ctx->add_timer(
+            timeout  => 30,
+            callback => sub {
+                $logger->log_from( $ctx, INFO, "... Timed out waiting for Socket" ) if INFO;
+                fail('... unable to get response after 30(s)');
+                $ctx->remove_watcher( $r );
+                $ctx->exit;
                 $socket->close;
             }
         );

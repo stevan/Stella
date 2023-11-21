@@ -3,8 +3,6 @@ use v5.38;
 use experimental 'class', 'try', 'builtin';
 use builtin qw[ blessed refaddr ];
 
-use Stella::Core::Mailbox;
-
 class Stella::ActorSystem {
     use Time::HiRes 'sleep';
     use Carp        'confess';
@@ -34,6 +32,7 @@ class Stella::ActorSystem {
 
     ADJUST {
         $mailbox isa Stella::Core::Mailbox || confess 'The `mailbox` must be a Stella::Core::Mailbox';
+        $mailbox->setup( $self );
 
         $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
@@ -100,6 +99,8 @@ class Stella::ActorSystem {
 
 
     method enqueue_message ($message) {
+        $mailbox->enqueue_message( $message );
+
         $logger->log_from(
             $init_ref, DEBUG,
             (sprintf "Enqueue Message TO(%s) FROM(%s) EVENT(%s)" =>
@@ -109,8 +110,6 @@ class Stella::ActorSystem {
             ),
             " >> caller: ".(caller(2))[3]
         ) if DEBUG;
-
-        $mailbox->enqueue_message( $message );
     }
 
     method add_to_dead_letter ($reason, $message) {

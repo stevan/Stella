@@ -5,8 +5,62 @@ use experimental 'class';
 class Stella::Core::Mailbox {
     use Carp 'confess';
 
+    field $input  :param = undef;
+    field $output :param = undef;
+
     field @messages;
+    field @outgoing;
     field @dead_letters;
+
+    method setup ($system) {
+        return unless $input && $output;
+
+        $system isa Stella::ActorSystem || confess 'The `$system` arg must be an ActorSystem';
+
+        $system->add_watcher(
+            fh       => $input,
+            poll     => 'r',
+            callback => sub ($fh) {
+                my $json = $fh->readline; # FIXME: this can block, do better
+
+                # NOTE: this should be in side a loop
+                # that keeps reading until it can't anymore
+                # but that might not really work here
+                # so maybe we just sysread a big chunk
+                # and then split on newlines and decode
+                # either way, this should be done better
+
+                my $data = {}; # JSON::decode( $json );
+                # - Inflate $data->{to} to local ActorRef
+                #     - if ActorRef not found, send to dead_letters
+                # - Inflate $data->{from} to RemoteActorRef
+                # - Inflate any RemoteActorRefs in $data->{event}
+                my $message = Stella::Core::Message->new( $data );
+                push @messages => $message;
+            }
+        );
+
+        $system->add_watcher(
+            fh       => $output,
+            poll     => 'w',
+            callback => sub ($fh) {
+
+                my @json;
+                foreach my $message (@outgoing) {
+                    my $data = {};
+                    # - Deflate $data->{to} ActorRef
+                    # - Deflate $data->{from} ActorRef
+                    # - Deflate any ActorRefs in $data->{event}
+                    my $json = "{}"; # JSON::encode($data)
+                    push @json => $json;
+                }
+
+                $fh->print( join "\n" => @json );
+
+                @outgoing = ();
+            }
+        );
+    }
 
     method has_messages { !! scalar @messages }
 
