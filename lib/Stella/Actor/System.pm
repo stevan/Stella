@@ -2,29 +2,7 @@
 use v5.38;
 use experimental 'class';
 
-class Stella::Node {
-    use Carp 'confess';
-
-    field $system_init :param;
-    field $system_pid;
-    field $system;
-
-    ADJUST {
-        $system = Stella::ActorSystem->new(
-            init => sub ($ctx) {
-                $system_pid = $ctx->spawn( Stella::Actor::System->new );
-                $system_init->($ctx);
-            }
-        );
-    }
-
-    method start {
-        $system->loop;
-        return $system->statistics;
-    }
-
-}
-
+use Stella;
 
 class Stella::Actor::System :isa(Stella::Actor) {
     use Stella::Tools qw[ :events :debug ];
@@ -35,13 +13,12 @@ class Stella::Actor::System :isa(Stella::Actor) {
         $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
     }
 
-    method PID ($,$) {}
-
     method Spawn ($ctx, $message) {
         my ($actor_class, $event_type) = $message->event->payload->@*;
         $logger->log_from( $ctx, INFO, '*Spawn called with Actor('.$actor_class.') with Event('.$event_type.') for response' ) if INFO;
 
         my $actor_ref = $ctx->spawn( $actor_class->new );
+
         $ctx->send( $message->from, event $event_type => $actor_ref );
     }
 
@@ -76,7 +53,7 @@ __END__
 
 =head1 NAME
 
-Stella::Node
+Stella::Actor::System
 
 =head1 DESCRIPTION
 

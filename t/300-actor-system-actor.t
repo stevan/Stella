@@ -11,7 +11,7 @@ use Test::Differences;
 use ok 'Stella';
 use ok 'Stella::Tools', ':events';
 
-use ok 'Stella::Node';
+use ok 'Stella::Actor::System';
 
 class Echo :isa(Stella::Actor) {
     use Stella::Tools qw[ :events :debug ];
@@ -35,6 +35,8 @@ class Echo :isa(Stella::Actor) {
 class EchoChamber :isa(Stella::Actor) {
     use Stella::Tools qw[ :events :debug ];
 
+    field $System :param;
+
     field $logger;
 
     ADJUST {
@@ -43,8 +45,6 @@ class EchoChamber :isa(Stella::Actor) {
 
     method Init ($ctx, $message) {
         $logger->log_from( $ctx, INFO, '*Init called' ) if INFO;
-
-        my $System = $ctx->system->lookup_actor( 2 );
 
         $ctx->send(
             $System,
@@ -55,8 +55,6 @@ class EchoChamber :isa(Stella::Actor) {
     method Start ($ctx, $message) {
         my ($Echo) = $message->event->payload->@*;
         $logger->log_from( $ctx, INFO, '*Start called with Echo ActorRef('.$Echo.')' ) if INFO;
-
-        my $System = $ctx->system->lookup_actor( 2 );
 
         my $x = 0;
         my $t1 = $ctx->add_interval(
@@ -77,6 +75,8 @@ class EchoChamber :isa(Stella::Actor) {
             callback => sub {
                 $t1->cancel;
                 $ctx->send( $System, event *Stella::Actor::System::Kill, $Echo );
+                $ctx->send( $System, event *Stella::Actor::System::Kill, $System );
+                $ctx->exit;
             }
         );
 
@@ -89,16 +89,26 @@ class EchoChamber :isa(Stella::Actor) {
 
 
 sub init ($ctx) {
-    my $EchoChamber = $ctx->spawn( EchoChamber->new );
+
+    my $System      = $ctx->spawn( Stella::Actor::System->new );
+    my $EchoChamber = $ctx->spawn( EchoChamber->new( System => $System ) );
 
     $ctx->send( $EchoChamber, event *EchoChamber::Init );
 }
 
 
-my $node = Stella::Node->new( system_init => \&init );
-isa_ok($node, 'Stella::Node');
+my $loop = Stella::ActorSystem->new( init => \&init );
+isa_ok($loop, 'Stella::ActorSystem');
 
-warn Dumper $node->start;
+$loop->loop;
+
+my $stats = $loop->statistics;
+
+#warn Dumper $stats;
+
+is_deeply($stats->{dead_letter_queue},[],'... the DeadLetterQueue is empty');
+eq_or_diff($stats->{zombies},[],'... there are no Zombie actors');
+eq_or_diff($stats->{watchers},{ r => {},w => {} },'... there are no watchers actors');
 
 done_testing();
 
