@@ -1,6 +1,7 @@
 
 use v5.38;
-use experimental 'class';
+use experimental 'class', 'builtin';
+use builtin 'blessed';
 
 use Stella::Core::Message;
 
@@ -11,6 +12,11 @@ use Stella::Core::Promise;
 
 class Stella::ActorRef {
     use Carp 'confess';
+
+    use overload (
+        fallback => 1,
+        '""' => \&to_string,
+    );
 
     field $pid    :param;
     field $system :param;
@@ -29,6 +35,10 @@ class Stella::ActorRef {
     method pid    { $pid    }
     method system { $system }
     method actor  { $actor  }
+
+    method to_string {
+        sprintf '%03d:%s' => $pid, blessed $actor;
+    }
 
     method promise { Stella::Core::Promise->new( system => $system ) }
 
