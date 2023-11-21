@@ -56,7 +56,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
 
         $logger->log_from( $ctx, INFO, '*Unsubscribe called with Subscription('.$subscription.')' ) if INFO;
 
-        @subscriptions = grep $_->pid ne $subscription->pid, @subscriptions;
+        @subscriptions = grep $_ ne $subscription, @subscriptions;
 
         $ctx->send( $subscription, event *Stella::Streams::Subscription::OnUnsubscribe );
 

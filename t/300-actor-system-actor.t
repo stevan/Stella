@@ -35,8 +35,6 @@ class Echo :isa(Stella::Actor) {
 class EchoChamber :isa(Stella::Actor) {
     use Stella::Tools qw[ :events :debug ];
 
-    field $System :param;
-
     field $logger;
 
     ADJUST {
@@ -47,7 +45,7 @@ class EchoChamber :isa(Stella::Actor) {
         $logger->log_from( $ctx, INFO, '*Init called' ) if INFO;
 
         $ctx->send(
-            $System,
+            $ctx->lookup('sys'),
             event *Stella::Actor::System::Spawn, "Echo", *Start
         );
     }
@@ -55,6 +53,8 @@ class EchoChamber :isa(Stella::Actor) {
     method Start ($ctx, $message) {
         my ($Echo) = $message->event->payload->@*;
         $logger->log_from( $ctx, INFO, '*Start called with Echo ActorRef('.$Echo.')' ) if INFO;
+
+        my $System = $ctx->lookup('sys');
 
         my $x = 0;
         my $t1 = $ctx->add_interval(
@@ -90,9 +90,11 @@ class EchoChamber :isa(Stella::Actor) {
 
 sub init ($ctx) {
 
-    my $System      = $ctx->spawn( Stella::Actor::System->new );
-    my $EchoChamber = $ctx->spawn( EchoChamber->new( System => $System ) );
+    my $System = $ctx->spawn( Stella::Actor::System->new );
 
+    $ctx->register('sys' => $System);
+
+    my $EchoChamber = $ctx->spawn( EchoChamber->new );
     $ctx->send( $EchoChamber, event *EchoChamber::Init );
 }
 

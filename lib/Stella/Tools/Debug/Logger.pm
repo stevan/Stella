@@ -24,7 +24,7 @@ class Stella::Tools::Debug::Logger {
     field $fh :param = \*STDERR;
 
     method log_from ($actor_ref_or_ctx, $level, @msg) {
-        state %pid_to_color = ( 1 => [100,100,100]);
+        state %pid_to_color = ( '001:Stella::Actor@local' => [100,100,100]);
 
         my $actor_ref = $actor_ref_or_ctx isa Stella::ActorRef
             ? $actor_ref_or_ctx
@@ -33,7 +33,7 @@ class Stella::Tools::Debug::Logger {
         $fh->print(
             $level_map{ $level },
             (sprintf " \e[20m\e[97m\e[48;2;%d;%d;%d;m %s \e[0m " => (
-                @{ $pid_to_color{ $actor_ref->pid }
+                @{ $pid_to_color{ $actor_ref }
                     //= [ map { (int(rand(20)) * 10) } 1,2,3 ] },
                 (blessed $actor_ref->actor eq 'Stella::Actor'
                     ? ':INIT:'

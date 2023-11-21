@@ -14,12 +14,12 @@ class Stella::Actor::System :isa(Stella::Actor) {
     }
 
     method Spawn ($ctx, $message) {
-        my ($actor_class, $event_type) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*Spawn called with Actor('.$actor_class.') with Event('.$event_type.') for response' ) if INFO;
+        my ($actor_class, $response_event) = $message->event->payload->@*;
+        $logger->log_from( $ctx, INFO, '*Spawn called with Actor('.$actor_class.') with Event('.$response_event.') for response' ) if INFO;
 
         my $actor_ref = $ctx->spawn( $actor_class->new );
 
-        $ctx->send( $message->from, event $event_type => $actor_ref );
+        $ctx->send( $message->from, event $response_event => $actor_ref );
     }
 
     method Kill ($ctx, $message) {

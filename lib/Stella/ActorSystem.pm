@@ -14,6 +14,7 @@ class Stella::ActorSystem {
     my $PIDS = 0;
 
     field %actor_refs;        # PID => ActorRef mapping of active Actors
+    field %actor_registry;    # Name => ActorRef mapping
     field %watchers;          # r/w => FD => list of I/O Watcher objects
     field @callbacks;         # queue of callbacks to be run in a given tick
     field @timers;            # queue of Timer/Interval objects to run
@@ -23,8 +24,8 @@ class Stella::ActorSystem {
     field $time = 0; # the current time, using Time::HiRes
     field $tick = 0; # the current tick of the loop
 
-    field $init :param; # function that accepts an ActorRef ($init_ctx) as its only argument
-    field $init_ctx;
+    field $init :param; # function that accepts ActorContext($init_ref) as its only argument
+    field $init_ref;
 
     field $select;
     field $logger;
@@ -41,17 +42,25 @@ class Stella::ActorSystem {
     ## Process Management
     ## ------------------------------------------------------------------------
 
+    method register_actor ($name, $actor_ref) {
+        $actor_registry{ $name } = $actor_ref;
+    }
+
+    method lookup_actor ($name) {
+        $actor_registry{ $name }
+    }
+
     method spawn ($actor) {
         $actor isa Stella::Actor || confess 'The `$actor` arg must be an Stella::Actor';
 
         my $a = Stella::ActorRef->new( pid => ++$PIDS, actor => $actor );
-        $actor_refs{ $a->pid } = $a;
+        $actor_refs{ $a } = $a;
 
         $logger->log_from(
-            $init_ctx, DEBUG,
+            $init_ref, DEBUG,
             (sprintf "Spawning ACTOR(%s) REF(%s)" => "$actor", "$a"),
             " >> caller: ".(caller(2))[3]
-        ) if DEBUG && $init_ctx;
+        ) if DEBUG && $init_ref;
 
         $a;
     }
@@ -60,14 +69,14 @@ class Stella::ActorSystem {
         $actor_ref isa Stella::ActorRef || confess 'The `$actor_ref` arg must be an ActorRef';
 
         $logger->log_from(
-            $init_ctx, DEBUG,
+            $init_ref, DEBUG,
             (sprintf "Request despawning of REF(%s)" => "$actor_ref"),
             " >> caller: ".(caller(2))[3]
         ) if DEBUG;
 
         if ($immediate) {
-            $logger->log_from( $init_ctx, DEBUG, "Immediate!! Despawning REF($actor_ref)") if DEBUG;
-            delete $actor_refs{ $actor_ref->pid };
+            $logger->log_from( $init_ref, DEBUG, "Immediate!! Despawning REF($actor_ref)") if DEBUG;
+            delete $actor_refs{ $actor_ref };
         }
         else {
             # add this to the front of the queue
@@ -75,14 +84,10 @@ class Stella::ActorSystem {
             # is done as soon as possible after
             # this tick
             unshift @callbacks => sub {
-                $logger->log_from( $init_ctx, DEBUG, "... Despawning REF($actor_ref)") if DEBUG;
-                delete $actor_refs{ $actor_ref->pid };
+                $logger->log_from( $init_ref, DEBUG, "... Despawning REF($actor_ref)") if DEBUG;
+                delete $actor_refs{ $actor_ref };
             };
         }
-    }
-
-    method lookup_actor ($pid) {
-        $actor_refs{ $pid };
     }
 
     ## ------------------------------------------------------------------------
@@ -93,7 +98,7 @@ class Stella::ActorSystem {
         $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
 
         $logger->log_from(
-            $init_ctx, DEBUG,
+            $init_ref, DEBUG,
             (sprintf "Enqueue Message TO(%s) FROM(%s) EVENT(%s)" =>
                 $message->to,
                 $message->from,
@@ -115,7 +120,7 @@ class Stella::ActorSystem {
         push @dead_letter_queue => [ $reason, $message ];
 
         $logger->log_from(
-            $init_ctx, ERROR,
+            $init_ref, ERROR,
             "Adding MSG($message) to Dead Letter Queue because ($reason)"
         ) if ERROR;
     }
@@ -128,7 +133,7 @@ class Stella::ActorSystem {
     method add_watcher ($watcher) {
         $watcher isa Stella::Core::Watcher || confess 'The `$watcher` arg must be a Watcher';
 
-        $logger->log_from( $init_ctx, DEBUG,
+        $logger->log_from( $init_ref, DEBUG,
             (sprintf "Adding `%s` watcher for fh(%s)" => $watcher->poll, $watcher->fh)
         ) if DEBUG;
 
@@ -156,7 +161,7 @@ class Stella::ActorSystem {
         (scalar grep { refaddr $_ eq refaddr $watcher } @$watchers)
             || confess 'Watcher not found, no matching watcher('.$watcher.') for poll('.$poll.') => fh('.$fh.')';
 
-        $logger->log_from( $init_ctx, DEBUG,
+        $logger->log_from( $init_ref, DEBUG,
             (sprintf "Removing `%s` watcher for fh(%s)" => $poll, $fh)
         ) if DEBUG;
 
@@ -225,9 +230,9 @@ class Stella::ActorSystem {
 
         if ( @timers ) {
             my @intervals;
-            $logger->log_from( $init_ctx, DEBUG, "Got timers ...") if DEBUG;
+            $logger->log_from( $init_ref, DEBUG, "Got timers ...") if DEBUG;
             while (@timers && $timers[0]->[0] <= $now) {
-                $logger->log_from( $init_ctx, DEBUG, "Running timers ($now) ...") if DEBUG;
+                $logger->log_from( $init_ref, DEBUG, "Running timers ($now) ...") if DEBUG;
                 my $timer = shift @timers;
                 while ( $timer->[1]->@* ) {
                     my $t = shift $timer->[1]->@*;
@@ -268,7 +273,7 @@ class Stella::ActorSystem {
             my @msgs = $self->drain_messages;
             while (@msgs) {
                 my $msg = shift @msgs;
-                if ( my $actor_ref = $actor_refs{ $msg->to->pid } ) {
+                if ( my $actor_ref = $actor_refs{ $msg->to } ) {
                     try {
                         $actor_ref->apply(
                             # TODO: memoize the Context objects
@@ -296,27 +301,27 @@ class Stella::ActorSystem {
     method next_tick ($f) {
         ref $f eq 'CODE' || confess 'The `$f` arg must be a CODE ref';
 
-        $logger->log_from( $init_ctx, DEBUG, "Adding callback for next-tick >> caller: ".(caller(2))[3] ) if DEBUG;
+        $logger->log_from( $init_ref, DEBUG, "Adding callback for next-tick >> caller: ".(caller(2))[3] ) if DEBUG;
 
         push @callbacks => $f;
         return;
     }
 
     method run_init {
-        $init_ctx = $self->spawn( Stella::Actor->new );
+        $init_ref = $self->spawn( Stella::Actor->new );
 
-        $logger->log_from( $init_ctx, DEBUG, "Running init callback ...") if DEBUG;
+        $logger->log_from( $init_ref, DEBUG, "Running init callback ...") if DEBUG;
 
-        try { $init->( Stella::ActorContext->new( actor_ref => $init_ctx, system => $self ) ) }
+        try { $init->( Stella::ActorContext->new( actor_ref => $init_ref, system => $self ) ) }
         catch ($e) {
             confess "Error occurred while running init callback: $e"
         }
     }
 
     method exit_loop {
-        $logger->log_from( $init_ctx, DEBUG, "Exiting loop ...") if DEBUG;
-        $self->despawn($init_ctx, 1);
-        $logger->log_from( $init_ctx, DEBUG, "Exited loop") if DEBUG;
+        $logger->log_from( $init_ref, DEBUG, "Exiting loop ...") if DEBUG;
+        $self->despawn($init_ref, 1);
+        $logger->log_from( $init_ref, DEBUG, "Exited loop") if DEBUG;
     }
 
 
@@ -370,25 +375,25 @@ class Stella::ActorSystem {
 
                         my @watchers;
                         if (defined $w && @$w) {
-                            $logger->log_from( $init_ctx, DEBUG, "Got write handles") if DEBUG;
+                            $logger->log_from( $init_ref, DEBUG, "Got write handles") if DEBUG;
                             foreach my $fh ( @$r ) {
                                 if ( my $ws = $watchers{w}->{ $fh } ) {
-                                    $logger->log_from( $init_ctx, DEBUG, "Found write watchers for fh($fh)") if DEBUG;
+                                    $logger->log_from( $init_ref, DEBUG, "Found write watchers for fh($fh)") if DEBUG;
                                     push @watchers => [ $fh, $ws ];
                                 }
                             }
                         }
                         elsif (defined $r && @$r) {
-                            $logger->log_from( $init_ctx, DEBUG, "Got read handles") if DEBUG;
+                            $logger->log_from( $init_ref, DEBUG, "Got read handles") if DEBUG;
                             foreach my $fh ( @$r ) {
                                 if ( my $ws = $watchers{r}->{ $fh } ) {
-                                    $logger->log_from( $init_ctx, DEBUG, "Found read watchers for fh($fh)") if DEBUG;
+                                    $logger->log_from( $init_ref, DEBUG, "Found read watchers for fh($fh)") if DEBUG;
                                     push @watchers => [ $fh, $ws ];
                                 }
                             }
                         }
                         elsif (defined $e && @$e) {
-                            $logger->log_from( $init_ctx, DEBUG, "Got exception handles") if DEBUG;
+                            $logger->log_from( $init_ref, DEBUG, "Got exception handles") if DEBUG;
                             die 'Should not get a exception select';
                         }
 

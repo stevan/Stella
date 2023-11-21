@@ -1,34 +1,5 @@
 
-## Remote Actors
-
-### Actor Remoting
-
-- you can only send/recv messages to/from a remote actor
-    - the ActorSystem is aware of the link
-        - in enque_message it
-            - notices it is a remote message
-                - looks up the link via address
-                    - wraps the message in an envelope
-                    - sends to available link
-
-- the other actor systems gets message on the wire
-    - unpacks the message
-        -
-
-
-### Setup Link
-
-- Parent process install SIGCLD handler which monitors for all
-- Parent opens socketpair for child
-- Parent process forks child
-    - Child installs SIGHUP, SIGTERM for control
-        - Parent can send these signals to stop/restart process
-    - Child creates a ParentActorSystem for parent
-        - attaches socketpair
-        - adds it to local ActorSystem instance
-- Parent creates a ChildActorSystem for child
-    - attaches socketpair
-    - adds it to local ActorSystem instance
+## Stuff
 
 
 

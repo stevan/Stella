@@ -57,6 +57,16 @@ class Stella::ActorContext {
         return $timer;
     }
 
+    method register ($name, $actor_ref) {
+        $actor_ref isa Stella::ActorRef || confess 'The `$actor_ref` arg must be an ActorRef';
+
+        $system->register_actor( $name, $actor_ref );
+    }
+
+    method lookup ($name) {
+        $system->lookup_actor( $name );
+    }
+
     method spawn ($actor) {
         $actor isa Stella::Actor || confess 'The `$actor` arg must be an Actor';
 
