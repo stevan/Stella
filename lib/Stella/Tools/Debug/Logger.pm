@@ -23,8 +23,12 @@ class Stella::Tools::Debug::Logger {
 
     field $fh :param = \*STDERR;
 
-    method log_from ($actor_ref, $level, @msg) {
+    method log_from ($actor_ref_or_ctx, $level, @msg) {
         state %pid_to_color = ( 1 => [100,100,100]);
+
+        my $actor_ref = $actor_ref_or_ctx isa Stella::ActorRef
+            ? $actor_ref_or_ctx
+            : $actor_ref_or_ctx->actor_ref;
 
         $fh->print(
             $level_map{ $level },

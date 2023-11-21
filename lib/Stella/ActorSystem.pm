@@ -44,7 +44,7 @@ class Stella::ActorSystem {
     method spawn ($actor) {
         $actor isa Stella::Actor || confess 'The `$actor` arg must be an Stella::Actor';
 
-        my $a = Stella::ActorRef->new( pid => ++$PIDS, system => $self, actor => $actor );
+        my $a = Stella::ActorRef->new( pid => ++$PIDS, actor => $actor );
         $actor_refs{ $a->pid } = $a;
 
         $logger->log_from(
@@ -270,7 +270,14 @@ class Stella::ActorSystem {
                 my $msg = shift @msgs;
                 if ( my $actor_ref = $actor_refs{ $msg->to->pid } ) {
                     try {
-                        $actor_ref->apply( $msg );
+                        $actor_ref->apply(
+                            # TODO: memoize the Context objects
+                            Stella::ActorContext->new(
+                                actor_ref => $actor_ref,
+                                system => $self
+                            ),
+                            $msg
+                        );
                     } catch ($e) {
                         $self->add_to_dead_letter( $e => $msg );
                     }
@@ -300,7 +307,7 @@ class Stella::ActorSystem {
 
         $logger->log_from( $init_ctx, DEBUG, "Running init callback ...") if DEBUG;
 
-        try { $init->( Stella::ActorContext->new( actor_ref => $init_ctx ) ) }
+        try { $init->( Stella::ActorContext->new( actor_ref => $init_ctx, system => $self ) ) }
         catch ($e) {
             confess "Error occurred while running init callback: $e"
         }

@@ -19,33 +19,33 @@ class Stella::ActorRef {
         '""' => \&to_string,
     );
 
-    field $pid    :param;
-    field $system :param;
-    field $actor  :param;
+    field $pid     :param;
+    field $actor   :param;
+    field $address :param = 'local';
 
     field $behavior;
 
     ADJUST {
-        defined $pid                    || confess 'The `$pid` param must defined value';
-        $system isa Stella::ActorSystem || confess 'The `$system` param must be an ActorSystem';
-        $actor  isa Stella::Actor       || confess 'The `$actor` param must be an Actor';
+        defined $pid              || confess 'The `$pid` param must defined value';
+        $actor  isa Stella::Actor || confess 'The `$actor` param must be an Actor';
 
         $behavior = $actor->behavior;
     }
 
-    method pid     { $pid    }
-    method system  { $system }
-    method actor   { $actor  }
+    method address { $address }
+    method pid     { $pid     }
+    method actor   { $actor   }
 
     method to_string {
-        sprintf '%03d:%s' => $pid, blessed $actor;
+        sprintf '%03d:%s@%s' => $pid, blessed $actor, $address;
     }
 
-    method apply ($message) {
-        $message isa Stella::Core::Message  || confess 'The `$message` arg must be a Message';
+    method apply ($ctx, $message) {
+        $ctx     isa Stella::ActorContext  || confess 'The `$ctx` arg must be a ActorContext';
+        $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
 
         $behavior->apply(
-            Stella::ActorContext->new( actor_ref => $self ),
+            $ctx,
             $message
         );
     }
