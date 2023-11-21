@@ -1,36 +1,40 @@
 
 use v5.38;
 use experimental 'class', 'try', 'builtin';
+use builtin qw[ blessed refaddr ];
+
+use Stella::Core::Mailbox;
 
 class Stella::ActorSystem {
     use Time::HiRes 'sleep';
     use Carp        'confess';
 
-    use builtin qw[ blessed refaddr ];
     use IO::Select;
 
     use Stella::Tools::Debug;
 
     my $PIDS = 0;
 
-    field %actor_refs;        # PID => ActorRef mapping of active Actors
-    field %actor_registry;    # Name => ActorRef mapping
-    field %watchers;          # r/w => FD => list of I/O Watcher objects
-    field @callbacks;         # queue of callbacks to be run in a given tick
-    field @timers;            # queue of Timer/Interval objects to run
-    field @msg_queue;         # queue of message to be deliverd to actors
-    field @dead_letter_queue; # queue of messages that failed to delivery for a given reason
+    field %actor_refs;     # PID => ActorRef mapping of active Actors
+    field %actor_registry; # Name => ActorRef mapping
+
+    field %watchers;  # r/w => FD => list of I/O Watcher objects
+    field @callbacks; # queue of callbacks to be run in a given tick
+    field @timers;    # queue of Timer/Interval objects to run
+
+    field $init    :param; # function that accepts ActorContext($init_ref) as its only argument
+    field $mailbox :param = Stella::Core::Mailbox->new;
+
+    field $init_ref;
+    field $select;
+    field $logger;
 
     field $time = 0; # the current time, using Time::HiRes
     field $tick = 0; # the current tick of the loop
 
-    field $init :param; # function that accepts ActorContext($init_ref) as its only argument
-    field $init_ref;
-
-    field $select;
-    field $logger;
-
     ADJUST {
+        $mailbox isa Stella::Core::Mailbox || confess 'The `mailbox` must be a Stella::Core::Mailbox';
+
         $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
         # set up the I/O stuff
@@ -94,9 +98,8 @@ class Stella::ActorSystem {
     ## Messages
     ## ------------------------------------------------------------------------
 
-    method enqueue_message ($message) {
-        $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
 
+    method enqueue_message ($message) {
         $logger->log_from(
             $init_ref, DEBUG,
             (sprintf "Enqueue Message TO(%s) FROM(%s) EVENT(%s)" =>
@@ -107,17 +110,11 @@ class Stella::ActorSystem {
             " >> caller: ".(caller(2))[3]
         ) if DEBUG;
 
-        push @msg_queue => $message;
-    }
-
-    method drain_messages {
-        my @msgs   = @msg_queue;
-        @msg_queue = ();
-        return @msgs;
+        $mailbox->enqueue_message( $message );
     }
 
     method add_to_dead_letter ($reason, $message) {
-        push @dead_letter_queue => [ $reason, $message ];
+        $mailbox->add_dead_letter( $reason, $message );
 
         $logger->log_from(
             $init_ref, ERROR,
@@ -269,17 +266,17 @@ class Stella::ActorSystem {
 
         # messages ...
 
-        if (@msg_queue) {
-            my @msgs = $self->drain_messages;
+        if ($mailbox->has_messages) {
+            my @msgs = $mailbox->drain_messages;
             while (@msgs) {
                 my $msg = shift @msgs;
                 if ( my $actor_ref = $actor_refs{ $msg->to } ) {
                     try {
                         $actor_ref->apply(
                             # TODO: memoize the Context objects
-                            Stella::ActorContext->new(
+                            Stella::Core::Context->new(
                                 actor_ref => $actor_ref,
-                                system => $self
+                                system    => $self
                             ),
                             $msg
                         );
@@ -312,7 +309,7 @@ class Stella::ActorSystem {
 
         $logger->log_from( $init_ref, DEBUG, "Running init callback ...") if DEBUG;
 
-        try { $init->( Stella::ActorContext->new( actor_ref => $init_ref, system => $self ) ) }
+        try { $init->( Stella::Core::Context->new( actor_ref => $init_ref, system => $self ) ) }
         catch ($e) {
             confess "Error occurred while running init callback: $e"
         }
@@ -333,7 +330,7 @@ class Stella::ActorSystem {
         $self->run_init;
 
         $logger->line("start") if INFO;
-        while ( @timers || @msg_queue || @callbacks ) {
+        while ( @timers || @callbacks || $mailbox->has_messages ) {
             $tick++;
             $logger->line(sprintf "tick(%03d)" => $tick) if INFO;
             $self->tick;
@@ -344,7 +341,7 @@ class Stella::ActorSystem {
             # we do not wait for callbacks because
             # any that exist were added with next_tick
             # and so should happen in the next tick
-            if ( @timers && !@msg_queue ) {
+            if ( @timers && !$mailbox->has_messages ) {
                 my $next_timer = $timers[0];
 
                 if ( $next_timer && $next_timer->[1]->@* ) {
@@ -429,7 +426,7 @@ class Stella::ActorSystem {
         # and then it can add these things at the
         # end.
         +{
-            dead_letter_queue => [ @dead_letter_queue ],
+            dead_letter_queue => [ $mailbox->dump_dead_letters ],
             zombies           => [ keys %actor_refs   ],
             watchers          => {
                 # TODO - improve this

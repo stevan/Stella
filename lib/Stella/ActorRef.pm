@@ -4,7 +4,7 @@ use experimental 'class', 'builtin';
 use builtin 'blessed';
 
 use Stella::Core::Message;
-use Stella::ActorContext;
+use Stella::Core::Context;
 
 use Stella::Core::Timer; # loads Interval
 use Stella::Core::Watcher;
@@ -41,7 +41,7 @@ class Stella::ActorRef {
     }
 
     method apply ($ctx, $message) {
-        $ctx     isa Stella::ActorContext  || confess 'The `$ctx` arg must be a ActorContext';
+        $ctx     isa Stella::Core::Context  || confess 'The `$ctx` arg must be a ActorContext';
         $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
 
         $behavior->apply(
@@ -63,9 +63,7 @@ Stella::ActorRef
 
 =head1 DESCRIPTION
 
-The L<Stella::ActorRef> is a wrapper around the L<Stella::Actor> and the
-L<Stella::ActorSystem> that provides a number of convenience methods. It is
-most often used as a "context" variable that is passed to dispatched methods.
+The L<Stella::ActorRef> is a wrapper around the L<Stella::Actor>.
 
 L<Stella::ActorRef> can also be seen as an "activation record" of the
 L<Stella::Actor> within the L<Stella::ActorSystem>, as it is the keeper of

@@ -1,6 +1,15 @@
 
-## Stuff
+## Remote Actors
 
+- ActorSystem has a mailbox
+    - Mailbox handles:
+        - send_message
+        - drain_messages
+        - dead_letter_queue
+
+- Mailbox can register watchers on file handles
+    - for outside input (read)
+    - for sending output (write)
 
 
 ## Linked Actors

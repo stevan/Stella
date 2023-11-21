@@ -14,7 +14,7 @@ class Stella::Behavior::Method :isa(Stella::Behavior) {
     }
 
     method apply ($ctx, $message) {
-        $ctx     isa Stella::ActorContext  || confess 'The `$ctx` arg must be an ActorContext';
+        $ctx     isa Stella::Core::Context  || confess 'The `$ctx` arg must be an ActorContext';
         $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
 
         my $symbol = $message->event->symbol;

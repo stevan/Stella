@@ -10,7 +10,7 @@ use Stella::Core::Watcher;
 
 use Stella::Core::Promise;
 
-class Stella::ActorContext {
+class Stella::Core::Context {
     use Carp 'confess';
 
     use overload (
@@ -99,16 +99,12 @@ __END__
 
 =head1 NAME
 
-Stella::ActorContext
+Stella::Core::Context
 
 =head1 DESCRIPTION
 
-The L<Stella::ActorContext> is a wrapper around the L<Stella::Actor> and the
-L<Stella::ActorSystem> that provides a number of convenience methods. It is
+The L<Stella::Core::Context> is a wrapper around a L<Stella::ActorRef> and a
+L<Stella::ActorSystem>, and provides a number of convenience methods. It is
 most often used as a "context" variable that is passed to dispatched methods.
-
-L<Stella::ActorContext> can also be seen as an "activation record" of the
-L<Stella::Actor> within the L<Stella::ActorSystem>, as it is the keeper of
-the PID value.
 
 =cut
