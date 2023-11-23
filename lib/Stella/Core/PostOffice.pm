@@ -46,14 +46,6 @@ class Stella::Core::PostOffice {
                 my $data = decode($json);
 
                 # - Inflate $data->{to} to local ActorRef
-
-                $data->{to} = $system->lookup_actor(
-                    sprintf '%03d:%s@%s' =>
-                        $data->{to}->{pid},
-                        $data->{to}->{actor},
-                        $data->{to}->{address}
-                );
-
                 #  - if ActorRef not found, send to dead_letters
                 if (!$data->{to}) {
                     push @dead_letters => [ 'ACTOR NOT FOUND' => $data ];
@@ -76,23 +68,7 @@ class Stella::Core::PostOffice {
 
                 my @json;
                 foreach my $message (@outgoing) {
-                    my $data = {
-                        to => {
-                            pid     => $to->pid,
-                            actor   => blessed $to->actor,
-                            address => $to->address,
-                        },
-                        from => {
-                            pid     => $from->pid,
-                            actor   => blessed $from->actor,
-                            address => $from->address, # TODO: covert this from local to hostname
-                        },
-                        event => {
-                            symbol  => $event->symbol,
-                            payload => $event->payload # TODO: default all ActorRefs inside
-                        }
-
-                    };
+                    my $data = {};
                     # - Deflate $data->{to} ActorRef
                     # - Deflate $data->{from} ActorRef
                     # - Deflate any ActorRefs in $data->{event}
