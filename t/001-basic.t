@@ -105,9 +105,6 @@ sub init ($ctx) {
         isa_ok($Ping, 'Stella::ActorRef');
         isa_ok($Pong, 'Stella::ActorRef');
 
-        is($Ping->actor_props, $ping, '... the actor ref has the right actor_props');
-        is($Pong->actor_props, $pong, '... the actor ref has the right actor_props');
-
         $ctx->send( $Ping, event *PingPong::Start, $Pong );
 
         pass('... starting test');

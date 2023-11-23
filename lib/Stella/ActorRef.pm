@@ -22,11 +22,12 @@ class Stella::ActorRef {
         defined $pid                        || confess 'The `$pid` param must defined value';
         defined $address                    || confess 'The `$address` param must defined value';
         $actor_props isa Stella::ActorProps || confess 'The `$actor_props` param must be an ActorProps';
+
+        $actor    = $actor_props->new_actor;
+        $behavior = $actor->behavior;
     }
 
-    method pid         { $pid         }
-    method address     { $address     }
-    method actor_props { $actor_props }
+    method actor_isa ($class) { $actor_props->class->isa( $class ) }
 
     method to_string {
         sprintf '%03d:%s@%s' => $pid, $actor_props->class, $address;
@@ -35,9 +36,6 @@ class Stella::ActorRef {
     method apply ($ctx, $message) {
         $ctx     isa Stella::Core::Context || confess 'The `$ctx` arg must be a ActorContext';
         $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
-
-        $actor    //= $actor_props->new_actor;
-        $behavior //= $actor->behavior;
 
         $behavior->apply(
             $actor,

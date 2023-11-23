@@ -7,7 +7,7 @@ use Stella::Behavior;
 class Stella::Actor::Remote :isa(Stella::Actor) {
 
     method behavior {
-        Stella::Behavior->new
+        Stella::Behavior::Remote->new
     }
 }
 
