@@ -36,9 +36,12 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         $logger->log_from( $ctx, INFO, '*Subscribe called with Subscriber('.$subscriber.')' ) if INFO;
 
         my $subscription = $ctx->spawn(
-            Stella::Streams::Subscription->new(
-                publisher  => $ctx->actor_ref,
-                subscriber => $subscriber
+            Stella::ActorProps->new(
+                class => 'Stella::Streams::Subscription',
+                args  => {
+                    publisher  => $ctx->actor_ref,
+                    subscriber => $subscriber
+                }
             )
         );
         #$subscriber->trap( *SIGEXIT );

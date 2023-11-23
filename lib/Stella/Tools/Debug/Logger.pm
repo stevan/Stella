@@ -35,7 +35,7 @@ class Stella::Tools::Debug::Logger {
             (sprintf " \e[20m\e[97m\e[48;2;%d;%d;%d;m %s \e[0m " => (
                 @{ $pid_to_color{ $actor_ref }
                     //= [ map { (int(rand(20)) * 10) } 1,2,3 ] },
-                (blessed $actor_ref->actor eq 'Stella::Actor'
+                ($actor_ref->actor_props->class eq 'Stella::Actor'
                     ? ':INIT:'
                     : $actor_ref->to_string),
             )),

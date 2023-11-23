@@ -75,7 +75,7 @@ sub init ($ctx) {
 
     my $logger; $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
-    my $Input = $ctx->spawn( Input->new );
+    my $Input = $ctx->spawn( Stella::ActorProps->new( class => 'Input' ) );
     isa_ok($Input, 'Stella::ActorRef');
 
     $logger->log_from( $ctx, INFO, "...Sending *Read to Input within Timer(1)" ) if INFO;

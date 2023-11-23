@@ -3,7 +3,7 @@ use v5.38;
 use experimental 'class';
 
 class Stella::Behavior {
-    method apply ($, $) {}
+    method apply ($, $, $) {}
 }
 
 __END__

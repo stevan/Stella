@@ -13,12 +13,12 @@ class Stella::Behavior::Method :isa(Stella::Behavior) {
         $_method_cache{$_} = undef foreach @$allowed;
     }
 
-    method apply ($ctx, $message) {
-        $ctx     isa Stella::Core::Context  || confess 'The `$ctx` arg must be an ActorContext';
+    method apply ($actor, $ctx, $message) {
+        $actor   isa Stella::Actor         || confess 'The `$actor` arg must be an Actor';
+        $ctx     isa Stella::Core::Context || confess 'The `$ctx` arg must be an ActorContext';
         $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
 
         my $symbol = $message->event->symbol;
-        my $actor  = $ctx->actor_ref->actor;
 
         exists $_method_cache{ $symbol } || confess "Unsupported message ($symbol)";
 

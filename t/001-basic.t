@@ -93,11 +93,11 @@ sub init ($ctx) {
     foreach ( 1 .. 10 ) {
         my $max = int(rand(10));
 
-        my $ping = PingPong->new( name => "Ping($_)", max => $max );
-        my $pong = PingPong->new( name => "Pong($_)", max => $max );
+        my $ping = Stella::ActorProps->new( class => 'PingPong', args => { name => "Ping($_)", max => $max  } );
+        my $pong = Stella::ActorProps->new( class => 'PingPong', args => { name => "Pong($_)", max => $max  } );
 
-        isa_ok($ping, 'Stella::Actor');
-        isa_ok($pong, 'Stella::Actor');
+        isa_ok($ping, 'Stella::ActorProps');
+        isa_ok($pong, 'Stella::ActorProps');
 
         my $Ping = $ctx->spawn( $ping );
         my $Pong = $ctx->spawn( $pong );
@@ -105,8 +105,8 @@ sub init ($ctx) {
         isa_ok($Ping, 'Stella::ActorRef');
         isa_ok($Pong, 'Stella::ActorRef');
 
-        is($Ping->actor, $ping, '... the actor ref has the right actor');
-        is($Pong->actor, $pong, '... the actor ref has the right actor');
+        is($Ping->actor_props, $ping, '... the actor ref has the right actor_props');
+        is($Pong->actor_props, $pong, '... the actor ref has the right actor_props');
 
         $ctx->send( $Ping, event *PingPong::Start, $Pong );
 

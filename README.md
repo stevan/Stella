@@ -76,8 +76,14 @@ sub init ($ctx) {
         # give them a random max-pings
         my $max = int(rand(10));
 
-        my $Ping = $ctx->spawn( PingPong->new( name => "Ping($_)", max => $max ) );
-        my $Pong = $ctx->spawn( PingPong->new( name => "Pong($_)", max => $max ) );
+        my $Ping = $ctx->spawn( Stella::ActorProps->new(
+            class => 'PingPong',
+            args  => { name => "Ping($_)", max => $max }
+        ));
+        my $Pong = $ctx->spawn( Stella::ActorProps->new(
+            class => 'PingPong',
+            args  => { name => "Pong($_)", max => $max }
+        ));
 
         # start up this pair ...
         $Ping->send( $Pong, Stella::Event->new( symbol => *PingPong::Pong ) );

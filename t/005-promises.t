@@ -66,7 +66,7 @@ sub init ($ctx) {
 
     my $logger; $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
-    my $Service = $ctx->spawn( Service->new );
+    my $Service = $ctx->spawn( Stella::ActorProps->new( class => 'Service' ) );
     isa_ok($Service, 'Stella::ActorRef');
 
     my $promise = $ctx->promise;

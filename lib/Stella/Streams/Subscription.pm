@@ -38,9 +38,12 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
         }
 
         $observer = $ctx->spawn(
-            Stella::Streams::Observer::Subscription->new(
-                num_elements => $num_elements,
-                subscriber   => $subscriber
+            Stella::ActorProps->new(
+                class => 'Stella::Streams::Observer::Subscription',
+                args  => {
+                    num_elements => $num_elements,
+                    subscriber   => $subscriber
+                }
             )
         );
         #$observer->trap( *SIGEXIT );

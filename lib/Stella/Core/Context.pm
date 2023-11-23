@@ -67,10 +67,10 @@ class Stella::Core::Context {
         $system->lookup_actor( $name );
     }
 
-    method spawn ($actor) {
-        $actor isa Stella::Actor || confess 'The `$actor` arg must be an Actor';
+    method spawn ($actor_props) {
+        $actor_props isa Stella::ActorProps || confess 'The `$actor_props` arg must be an ActorProps';
 
-        $system->spawn( $actor );
+        $system->spawn( $actor_props );
     }
 
     method send ($to, $event) {

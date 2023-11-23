@@ -90,11 +90,11 @@ class EchoChamber :isa(Stella::Actor) {
 
 sub init ($ctx) {
 
-    my $System = $ctx->spawn( Stella::Actor::System->new );
+    my $System = $ctx->spawn( Stella::ActorProps->new( class => 'Stella::Actor::System' ) );
 
     $ctx->register('sys' => $System);
 
-    my $EchoChamber = $ctx->spawn( EchoChamber->new );
+    my $EchoChamber = $ctx->spawn( Stella::ActorProps->new( class => 'EchoChamber' ) );
     $ctx->send( $EchoChamber, event *EchoChamber::Init );
 }
 

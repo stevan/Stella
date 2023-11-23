@@ -57,26 +57,38 @@ my @Sinks = (
 sub init ($ctx) {
 
     my $publisher = $ctx->spawn(
-        Stella::Streams::Publisher->new( source => $Source )
+        Stella::ActorProps->new(
+            class => 'Stella::Streams::Publisher',
+            args  => { source => $Source }
+        )
     );
 
     my @subscribers = (
         $ctx->spawn(
-            Stella::Streams::Subscriber->new(
-                request_size => 5,
-                sink         => $Sinks[0]
+            Stella::ActorProps->new(
+                class => 'Stella::Streams::Subscriber',
+                args  => {
+                    request_size => 5,
+                    sink         => $Sinks[0]
+                }
             )
         ),
         $ctx->spawn(
-            Stella::Streams::Subscriber->new(
-                request_size => 10,
-                sink         => $Sinks[1]
+            Stella::ActorProps->new(
+                class => 'Stella::Streams::Subscriber',
+                args  => {
+                    request_size => 10,
+                    sink         => $Sinks[1]
+                }
             )
         ),
         $ctx->spawn(
-            Stella::Streams::Subscriber->new(
-                request_size => 2,
-                sink         => $Sinks[2]
+            Stella::ActorProps->new(
+                class => 'Stella::Streams::Subscriber',
+                args  => {
+                    request_size => 2,
+                    sink         => $Sinks[2]
+                }
             )
         ),
     );

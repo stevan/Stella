@@ -17,7 +17,7 @@ class Stella::Actor::System :isa(Stella::Actor) {
         my ($actor_class, $response_event) = $message->event->payload->@*;
         $logger->log_from( $ctx, INFO, '*Spawn called with Actor('.$actor_class.') with Event('.$response_event.') for response' ) if INFO;
 
-        my $actor_ref = $ctx->spawn( $actor_class->new );
+        my $actor_ref = $ctx->spawn( Stella::ActorProps->new( class => $actor_class ) );
 
         $ctx->send( $message->from, event $response_event => $actor_ref );
     }

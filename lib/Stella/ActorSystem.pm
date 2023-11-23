@@ -54,15 +54,15 @@ class Stella::ActorSystem {
         $actor_registry{ $name } || $actor_refs{ $name }
     }
 
-    method spawn ($actor) {
-        $actor isa Stella::Actor || confess 'The `$actor` arg must be an Stella::Actor';
+    method spawn ($actor_props) {
+        $actor_props isa Stella::ActorProps || confess 'The `$actor_props` arg must be an Stella::ActorProps';
 
-        my $a = Stella::ActorRef->new( pid => ++$PIDS, actor => $actor );
+        my $a = Stella::ActorRef->new( pid => ++$PIDS, actor_props => $actor_props );
         $actor_refs{ $a } = $a;
 
         $logger->log_from(
             $init_ref, DEBUG,
-            (sprintf "Spawning ACTOR(%s) REF(%s)" => "$actor", "$a"),
+            (sprintf "Spawning ACTOR(%s) REF(%s)" => "$actor_props", "$a"),
             " >> caller: ".(caller(2))[3]
         ) if DEBUG && $init_ref;
 
@@ -305,7 +305,7 @@ class Stella::ActorSystem {
     }
 
     method run_init {
-        $init_ref = $self->spawn( Stella::Actor->new );
+        $init_ref = $self->spawn( Stella::ActorProps->new( class => 'Stella::Actor' ) );
 
         $logger->log_from( $init_ref, DEBUG, "Running init callback ...") if DEBUG;
 

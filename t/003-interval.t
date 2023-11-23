@@ -41,7 +41,7 @@ sub init ($ctx) {
 
     my $logger; $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
-    my $Foo = $ctx->spawn( Foo->new );
+    my $Foo = $ctx->spawn( Stella::ActorProps->new( class => 'Foo' ) );
     isa_ok($Foo, 'Stella::ActorRef');
 
     my $i = $ctx->add_interval(
