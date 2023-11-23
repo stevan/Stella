@@ -7,22 +7,16 @@
 - add urn, uri and url to ACtor Ref
     - use them in mailbox/post-office
 
-### In RemoteActorRef
+### Stella::Actor::Remote
 
-- Just store the Actor class
-- and a PostOffice instance
+- the PostOffice will create an ActorProps for RemoteActors
+    - the ActorProps will create a RemoteActor instance
+        - has a link to the PostOffice so it can send messages
+        - which will provide a `behavior`
+            - that will send all messages to the post-office
 
-- actor is private so no need to care
-- no need to store behavior either
-
-- RemoteActorRef will override apply
-    - and send anything it gets to the PostOffice @outgoing
-
-### In ACtorSystem
-
-- add a method to spawn a RemoteActorRef to the system
-    - this can connect and manage RemoteActorRef connections to the PostOffice
-    - keep it simple
+- they will be normal ActorRef objects in the system
+    - so no changes need happen to the ActorSystem
 
 ## Linked Actors
 
