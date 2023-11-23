@@ -23,7 +23,7 @@ our %EXPORT_TAGS = (
     debug  => [ @Stella::Tools::Debug::EXPORT ]
 );
 
-sub actor_isa ( $a, $isa ) { $a isa Stella::ActorRef && $a->actor isa $isa }
+sub actor_isa ( $a, $isa ) { $a isa Stella::ActorRef && $a->actor_props->class->isa($isa) }
 
 sub event ($symbol, @payload) {
     return Stella::Event->new(

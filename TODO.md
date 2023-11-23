@@ -7,9 +7,6 @@
 - add urn, uri and url to ACtor Ref
     - use them in mailbox/post-office
 
-- Make ->actor fully private for ActorRef
-    - No one should have access to the Actor instance, except the Behavior
-
 ### In RemoteActorRef
 
 - Just store the Actor class
