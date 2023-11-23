@@ -3,14 +3,6 @@ use v5.38;
 use experimental 'class', 'builtin';
 use builtin 'blessed';
 
-use Stella::Core::Message;
-use Stella::Core::Context;
-
-use Stella::Core::Timer; # loads Interval
-use Stella::Core::Watcher;
-
-use Stella::Core::Promise;
-
 class Stella::ActorRef {
     use Carp 'confess';
 
@@ -28,8 +20,6 @@ class Stella::ActorRef {
     ADJUST {
         defined $pid              || confess 'The `$pid` param must defined value';
         $actor  isa Stella::Actor || confess 'The `$actor` param must be an Actor';
-
-        $behavior = $actor->behavior;
     }
 
     method address { $address }
@@ -41,8 +31,10 @@ class Stella::ActorRef {
     }
 
     method apply ($ctx, $message) {
-        $ctx     isa Stella::Core::Context  || confess 'The `$ctx` arg must be a ActorContext';
+        $ctx     isa Stella::Core::Context || confess 'The `$ctx` arg must be a ActorContext';
         $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
+
+        $behavior //= $actor->behavior;
 
         $behavior->apply(
             $ctx,

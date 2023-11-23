@@ -1,21 +1,31 @@
 
 ## Remote Actors
 
-- Mailbox needs an outgoing queue
-    - if a message is not local, it goes here
+### In ActorRef
 
-- Mailbox can register watchers on file handles
-    - for outside input (read)
-    - for sending output (write)
+- change pid to urn
+- add urn, uri and url to ACtor Ref
+    - use them in mailbox/post-office
 
-- The read watcher will read messages
-    - decode messages
-        - add messages to the local queue
+- Make ->actor fully private for ActorRef
+    - No one should have access to the Actor instance, except the Behavior
 
-- The write watcher will write messages
-    - encode each message
-        - write them to the output
+### In RemoteActorRef
 
+- Just store the Actor class
+- and a PostOffice instance
+
+- actor is private so no need to care
+- no need to store behavior either
+
+- RemoteActorRef will override apply
+    - and send anything it gets to the PostOffice @outgoing
+
+### In ACtorSystem
+
+- add a method to spawn a RemoteActorRef to the system
+    - this can connect and manage RemoteActorRef connections to the PostOffice
+    - keep it simple
 
 ## Linked Actors
 

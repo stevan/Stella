@@ -1,6 +1,7 @@
 
 use v5.38;
-use experimental 'class';
+use experimental 'class', 'builtin';
+use builtin 'blessed';
 
 class Stella::Core::Message {
     use Carp 'confess';

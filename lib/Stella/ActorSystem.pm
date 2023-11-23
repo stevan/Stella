@@ -32,7 +32,6 @@ class Stella::ActorSystem {
 
     ADJUST {
         $mailbox isa Stella::Core::Mailbox || confess 'The `mailbox` must be a Stella::Core::Mailbox';
-        $mailbox->setup( $self );
 
         $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
@@ -40,6 +39,8 @@ class Stella::ActorSystem {
         $select   = IO::Select->new;
         %watchers = ( r => {}, w => {} );
     }
+
+    ## ...
 
     ## ------------------------------------------------------------------------
     ## Process Management
@@ -50,7 +51,7 @@ class Stella::ActorSystem {
     }
 
     method lookup_actor ($name) {
-        $actor_registry{ $name }
+        $actor_registry{ $name } || $actor_refs{ $name }
     }
 
     method spawn ($actor) {
