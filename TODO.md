@@ -3,9 +3,10 @@
 
 ### In ActorRef
 
-- change pid to urn
-- add urn, uri and url to ACtor Ref
-    - use them in mailbox/post-office
+- we need to add
+    - way to stringify
+    - identifier for lookup
+    - url for external communications
 
 ### Stella::Actor::Remote
 
