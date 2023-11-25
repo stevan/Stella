@@ -8,7 +8,7 @@
     - identifier for lookup
     - url for external communications
 
-### Stella::Actor::Remote
+### Stella::Remove::*
 
 - the PostOffice will create an ActorProps for RemoteActors
     - the ActorProps will create a RemoteActor instance
@@ -18,6 +18,23 @@
 
 - they will be normal ActorRef objects in the system
     - so no changes need happen to the ActorSystem
+
+### In Stell::ActorSystem
+
+- need to add a LOOP-FOREVER feature
+
+- need to fix the loop for I/O watchers
+    - it will only use select if there is a wait time
+        - so we need to let that wait time be 0 and still run the select
+
+
+    - call tick
+        - find the next wait time
+            - 0 if nothing to wait for
+        - call select with wait time (or 0)
+
+
+<!--------------------------------------------------------------------->
 
 ## Linked Actors
 

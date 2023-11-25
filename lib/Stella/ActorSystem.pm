@@ -204,6 +204,8 @@ class Stella::ActorSystem {
         elsif ( $timers[-1]->[0] > $end_time ) {
             # and only sort when we absolutely have to
             @timers = sort { $a->[0] <=> $b->[0] } @timers, [ $end_time, [ $timer ] ];
+            # TODO: since we are sorting we might
+            # as well also prune the cancelled ones
         }
         else {
             # NOTE:
@@ -291,6 +293,44 @@ class Stella::ActorSystem {
         }
     }
 
+    method check_watchers ($r, $w, $e) {
+
+        my @watchers;
+        if (defined $w && @$w) {
+            $logger->log_from( $init_ref, DEBUG, "Got write handles") if DEBUG;
+            foreach my $fh ( @$r ) {
+                if ( my $ws = $watchers{w}->{ $fh } ) {
+                    $logger->log_from( $init_ref, DEBUG, "Found write watchers for fh($fh)") if DEBUG;
+                    push @watchers => [ $fh, $ws ];
+                }
+            }
+        }
+        elsif (defined $r && @$r) {
+            $logger->log_from( $init_ref, DEBUG, "Got read handles") if DEBUG;
+            foreach my $fh ( @$r ) {
+                if ( my $ws = $watchers{r}->{ $fh } ) {
+                    $logger->log_from( $init_ref, DEBUG, "Found read watchers for fh($fh)") if DEBUG;
+                    push @watchers => [ $fh, $ws ];
+                }
+            }
+        }
+        elsif (defined $e && @$e) {
+            $logger->log_from( $init_ref, DEBUG, "Got exception handles") if DEBUG;
+            die 'Should not get a exception select';
+        }
+
+        foreach ( @watchers ) {
+            my ($fh, $ws) = @$_;
+            foreach my $watcher ( @$ws ) {
+                try { $watcher->callback->( $fh ) }
+                catch ($e) {
+                    confess "Error occurred while running Watcher callback: $e"
+                }
+            }
+        }
+
+    }
+
     ## ------------------------------------------------------------------------
     ## The main loop
     ## ------------------------------------------------------------------------
@@ -361,48 +401,12 @@ class Stella::ActorSystem {
 
                     # do not wait for negative values ...
                     if ($wait > $Stella::Core::Timer::TIMER_PRECISION_DECIMAL) {
-
                         # XXX - should have some kind of max-timeout here
                         $logger->line( sprintf 'wait(%f)' => $wait ) if INFO;
 
-                        # FIXME:
-                        # This could all be done better,
-                        # and outside of the main loop
+
                         my ($r, $w, $e) = IO::Select::select( $select, undef, undef, $wait );
-
-                        my @watchers;
-                        if (defined $w && @$w) {
-                            $logger->log_from( $init_ref, DEBUG, "Got write handles") if DEBUG;
-                            foreach my $fh ( @$r ) {
-                                if ( my $ws = $watchers{w}->{ $fh } ) {
-                                    $logger->log_from( $init_ref, DEBUG, "Found write watchers for fh($fh)") if DEBUG;
-                                    push @watchers => [ $fh, $ws ];
-                                }
-                            }
-                        }
-                        elsif (defined $r && @$r) {
-                            $logger->log_from( $init_ref, DEBUG, "Got read handles") if DEBUG;
-                            foreach my $fh ( @$r ) {
-                                if ( my $ws = $watchers{r}->{ $fh } ) {
-                                    $logger->log_from( $init_ref, DEBUG, "Found read watchers for fh($fh)") if DEBUG;
-                                    push @watchers => [ $fh, $ws ];
-                                }
-                            }
-                        }
-                        elsif (defined $e && @$e) {
-                            $logger->log_from( $init_ref, DEBUG, "Got exception handles") if DEBUG;
-                            die 'Should not get a exception select';
-                        }
-
-                        foreach ( @watchers ) {
-                            my ($fh, $ws) = @$_;
-                            foreach my $watcher ( @$ws ) {
-                                try { $watcher->callback->( $fh ) }
-                                catch ($e) {
-                                    confess "Error occurred while running Watcher callback: $e"
-                                }
-                            }
-                        }
+                        $self->check_watchers( $r, $w, $e );
                     }
                 }
             }
