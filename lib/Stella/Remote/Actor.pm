@@ -7,10 +7,11 @@ use Stella::Remote::Behavior;
 class Stella::Remote::Actor :isa(Stella::Actor) {
     use Carp 'confess';
 
-    has $post_office :param;
+    field $post_office :param;
 
     ADJUST {
-        $post_office isa Stella::Remote::PostOffice || confess 'The `post_office` param must be a Remote::PostOffice instance';
+        $post_office isa Stella::Remote::PostOffice
+            || confess 'The `post_office` param must be a Remote::PostOffice instance';
     }
 
     method behavior {

@@ -43,6 +43,10 @@ class Stella::ActorRef {
             $message
         );
     }
+
+    method pack {
+        +{ pid => $pid, actor_class => $actor_props->class, address => $address };
+    }
 }
 
 __END__

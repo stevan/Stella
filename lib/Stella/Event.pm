@@ -24,6 +24,10 @@ class Stella::Event {
     method to_string {
         sprintf '%s => (%s)' => $symbol, join ', ' => @$payload;
     }
+
+    method pack {
+        +{ symbol => $symbol, payload => [ $payload ] };
+    }
 }
 
 __END__

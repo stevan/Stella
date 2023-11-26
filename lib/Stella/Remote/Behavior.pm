@@ -5,10 +5,11 @@ use experimental 'class';
 class Stella::Remote::Behavior :isa(Stella::Behavior) {
     use Carp 'confess';
 
-    has $post_office :param;
+    field $post_office :param;
 
     ADJUST {
-        $post_office isa Stella::Remote::PostOffice || confess 'The `post_office` param must be a Remote::PostOffice instance';
+        $post_office isa Stella::Remote::PostOffice
+            || confess 'The `post_office` param must be a Remote::PostOffice instance';
     }
 
     method apply ($, $, $message) {

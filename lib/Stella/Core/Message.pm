@@ -19,6 +19,10 @@ class Stella::Core::Message {
     method to    { $to    }
     method from  { $from  }
     method event { $event }
+
+    method pack {
+        +{ to => $to->pack, from => $from->pack, event => $event->pack };
+    }
 }
 
 __END__
