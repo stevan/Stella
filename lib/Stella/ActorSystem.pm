@@ -218,6 +218,29 @@ class Stella::ActorSystem {
         }
     }
 
+    method get_next_timer () {
+        while (my $next_timer = $timers[0]) {
+            # if we have any timers
+            if ( $next_timer->[1]->@* ) {
+                # if all of them are cancelled
+                if ( 0 == scalar grep !$_->cancelled, $next_timer->[1]->@* ) {
+                    # drop this set of timers
+                    shift @timers;
+                    # try again ...
+                    next;
+                }
+                else {
+                    last;
+                }
+            }
+            else {
+                shift @timers;
+            }
+        }
+
+        return $timers[0];
+    }
+
     ## ------------------------------------------------------------------------
     ## The TICK
     ## ------------------------------------------------------------------------
@@ -370,46 +393,31 @@ class Stella::ActorSystem {
         $self->run_init;
 
         $logger->line("start") if INFO;
+
+        # TODO: move this while condition into method
+        # so that we can add the LOOP_FOREVER feature
         while ( @timers || @callbacks || $mailbox->has_messages ) {
             $tick++;
             $logger->line(sprintf "tick(%03d)" => $tick) if INFO;
             $self->tick;
 
-            # if we have timers, but nothing in
-            # the queues, then we can wait
-            #
-            # we do not wait for callbacks because
-            # any that exist were added with next_tick
-            # and so should happen in the next tick
-            if ( @timers && !$mailbox->has_messages ) {
-                my $next_timer = $timers[0];
+            my $wait = 0;
 
-                if ( $next_timer && $next_timer->[1]->@* ) {
-
-                    my @ts = $next_timer->[1]->@*;
-
-                    # XXX - the below might need to be in a loop ???
-
-                    # if they are all cancelled
-                    if ( 0 == scalar grep !$_->cancelled, @ts ) {
-                        shift @timers;            # drop this set of timers
-                        next unless @timers;      # loop if we have no more timers
-                        $next_timer = $timers[0]; # grab the next timer
-                    }
-
-                    my $wait = ($next_timer->[0] - $time);
-
-                    # do not wait for negative values ...
-                    if ($wait > $Stella::Core::Timer::TIMER_PRECISION_DECIMAL) {
-                        # XXX - should have some kind of max-timeout here
-                        $logger->line( sprintf 'wait(%f)' => $wait ) if INFO;
-
-
-                        my ($r, $w, $e) = IO::Select::select( $select, undef, undef, $wait );
-                        $self->check_watchers( $r, $w, $e );
-                    }
+            if ( !$mailbox->has_messages && @timers ) {
+                if (my $next_timer = $self->get_next_timer) {
+                    $wait = $next_timer->[0] - $time;
                 }
             }
+
+            # do not wait for negative values ...
+            if ($wait < $Stella::Core::Timer::TIMER_PRECISION_DECIMAL) {
+                $wait = 0;
+            }
+
+            $logger->line( sprintf 'wait(%f)' => $wait ) if INFO && $wait;
+
+            my ($r, $w, $e) = IO::Select::select( $select, undef, undef, $wait );
+            $self->check_watchers( $r, $w, $e );
         }
         $logger->line("end") if INFO;
 

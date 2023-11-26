@@ -40,6 +40,7 @@ class Input :isa(Stella::Actor) {
                 $logger->log_from( $ctx, INFO, "... Socket is ready to read" ) if INFO;
                 my $line = <$socket>;
                 like($line, qr/200 OK/, '... got the correct response');
+                #warn join "\n" => <$socket>;
                 $ctx->remove_watcher( $r );
                 $ctx->exit;
                 $t->cancel;
