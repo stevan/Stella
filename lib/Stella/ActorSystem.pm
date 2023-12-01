@@ -66,6 +66,7 @@ class Stella::ActorSystem {
             " >> caller: ".(caller(2))[3]
         ) if DEBUG && $init_ref;
 
+        $a->start;
         $a;
     }
 
@@ -80,6 +81,7 @@ class Stella::ActorSystem {
 
         if ($immediate) {
             $logger->log_from( $init_ref, DEBUG, "Immediate!! Despawning REF($actor_ref)") if DEBUG;
+            $actor_ref->stop;
             delete $actor_refs{ $actor_ref };
         }
         else {
@@ -89,6 +91,7 @@ class Stella::ActorSystem {
             # this tick
             unshift @callbacks => sub {
                 $logger->log_from( $init_ref, DEBUG, "... Despawning REF($actor_ref)") if DEBUG;
+                $actor_ref->stop;
                 delete $actor_refs{ $actor_ref };
             };
         }
@@ -186,6 +189,7 @@ class Stella::ActorSystem {
 
     method schedule_timer ($timer) {
 
+        # XXX - should this use $time, or should it call ->now to update?
         my $end_time = $timer->calculate_end_time($self->now);
 
         if ( scalar @timers == 0 ) {

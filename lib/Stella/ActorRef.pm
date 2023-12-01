@@ -22,9 +22,21 @@ class Stella::ActorRef {
         defined $pid                        || confess 'The `$pid` param must defined value';
         defined $address                    || confess 'The `$address` param must defined value';
         $actor_props isa Stella::ActorProps || confess 'The `$actor_props` param must be an ActorProps';
+    }
 
+    method start {
         $actor    = $actor_props->new_actor;
         $behavior = $actor->behavior;
+    }
+
+    method stop {
+        $actor    = undef;
+        $behavior = undef;
+    }
+
+    method restart {
+        $self->stop;
+        $self->start;
     }
 
     method actor_isa ($class) { $actor_props->class->isa( $class ) }
@@ -36,6 +48,8 @@ class Stella::ActorRef {
     method apply ($ctx, $message) {
         $ctx     isa Stella::Core::Context || confess 'The `$ctx` arg must be a ActorContext';
         $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
+
+        $actor && $behavior || confess 'Cannot call `apply` before starting the Actor';
 
         $behavior->apply(
             $actor,
