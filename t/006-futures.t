@@ -44,14 +44,12 @@ class Stella::Behavior::Future {
     }
 }
 
-class FutureActor :isa(Stella::Actor) {
+class Future :isa(Stella::Actor) {
     use Test::More;
     use Stella::Tools::Debug;
 
-    field $producer :param;
-
     field $result;
-    field $on_success :param;
+    field $on_success;
 
     field $logger;
 
@@ -59,9 +57,7 @@ class FutureActor :isa(Stella::Actor) {
         $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
     }
 
-    method start ($ctx) {
-        $producer->($ctx);
-    }
+    method on_success ($f) { $on_success = $f; $self; }
 
     method success ($ctx, $event) {
         $result = $event;
@@ -74,21 +70,31 @@ class FutureActor :isa(Stella::Actor) {
     }
 }
 
+sub future ($ctx, $producer) {
+    my $future     = Future->new;
+    my $future_ref = $ctx->spawn(Stella::ActorProps->new( singleton => $future ));
+    $producer->(
+        Stella::Core::Context->new(
+            system    => $ctx->system,
+            actor_ref => $future_ref
+        )
+    );
+    $future;
+}
+
 sub init ($ctx) {
 
     my $Echo = $ctx->spawn(Stella::ActorProps->new( class => 'Echo' ));
 
-    my $f = FutureActor->new(
-        producer => sub ($ctx) {
+    my $f = future($ctx, sub ($ctx) {
             $ctx->send( $Echo, event *Echo::Echo => 'Welcome to the Future!' );
-        },
-        on_success => sub ($event) {
-            pass("... ON SUCCESS: $event");
-            $ctx->kill($Echo);
         }
     );
-    my $Future = $ctx->spawn(Stella::ActorProps->new( singleton => $f ));
-    $f->start(Stella::Core::Context->new( system => $ctx->system, actor_ref => $Future ));
+
+    $f->on_success(sub ($event) {
+        pass("... ON SUCCESS: $event");
+        $ctx->kill($Echo);
+    });
 
 }
 
