@@ -15,6 +15,7 @@ class Input :isa(Stella::Actor) {
     use Test::More;
     use Stella::Tools::Debug;
 
+    use POSIX qw[:errno_h];
     use IO::Socket::SSL;
     use HTTP::Request;
 
@@ -28,7 +29,10 @@ class Input :isa(Stella::Actor) {
         $logger->log_from( $ctx, INFO, "...got *Read" ) if INFO;
 
         my $socket = IO::Socket::SSL->new('www.google.com:443') || die 'Could not connect SSL to google';
-           $socket->print( HTTP::Request->new( GET => '/' )->as_string );
+           $socket->autoflush(1);
+           $socket->blocking(0);
+
+        $socket->print( HTTP::Request->new( GET => '/' )->as_string );
 
         my $r;
         my $t;
@@ -38,9 +42,18 @@ class Input :isa(Stella::Actor) {
             poll     => 'r',
             callback => sub ($socket) {
                 $logger->log_from( $ctx, INFO, "... Socket is ready to read" ) if INFO;
-                my $line = <$socket>;
-                like($line, qr/200 OK/, '... got the correct response');
-                #warn join "\n" => <$socket>;
+
+                my $expected = "HTTP/1.0 200 OK\r\n";
+
+                my $len = sysread $socket, my $line, length $expected;
+
+                if (not defined $len) {
+                    $logger->log_from( $ctx, INFO, "... Haven't gotten any data" ) if INFO;
+                    return;
+                }
+
+                is($line, $expected, '... got the correct response');
+
                 $ctx->remove_watcher( $r );
                 $ctx->exit;
                 $t->cancel;

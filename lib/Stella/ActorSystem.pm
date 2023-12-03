@@ -320,12 +320,42 @@ class Stella::ActorSystem {
         }
     }
 
-    method check_watchers ($r, $w, $e) {
+    method check_watchers ($wait) {
+
+        local $! = 0;
+
+        my $start = $self->now;
+
+        my @handles = IO::Select::select(
+            keys %{$watchers{r}} ? $select : undef,
+            keys %{$watchers{w}} ? $select : undef,
+            $select,
+            $wait
+        );
+
+        # update the clock
+        my $now = $self->now;
+
+        # deal with errors and timeouts now ...
+        if (scalar @handles == 0) {
+            confess "Got error from select: $!" if $!;
+
+            # otherwise ... we hit the timeout
+            $logger->log_from( $init_ref, DEBUG, "Woke up from timeout($wait)") if DEBUG;
+            # ... return early
+            return;
+        }
+
+
+        # we have handles
+        $logger->log_from( $init_ref, DEBUG, "Woke up by select event after (".($now - $start).")") if DEBUG;
+        my ($r, $w, $e) = @handles;
 
         my @watchers;
+
         if (defined $w && @$w) {
             $logger->log_from( $init_ref, DEBUG, "Got write handles") if DEBUG;
-            foreach my $fh ( @$r ) {
+            foreach my $fh ( @$w) {
                 if ( my $ws = $watchers{w}->{ $fh } ) {
                     $logger->log_from( $init_ref, DEBUG, "Found write watchers for fh($fh)") if DEBUG;
                     push @watchers => [ $fh, $ws ];
@@ -420,8 +450,7 @@ class Stella::ActorSystem {
 
             $logger->line( sprintf 'wait(%f)' => $wait ) if INFO && $wait;
 
-            my ($r, $w, $e) = IO::Select::select( $select, undef, undef, $wait );
-            $self->check_watchers( $r, $w, $e );
+            $self->check_watchers( $wait );
         }
         $logger->line("end") if INFO;
 
