@@ -87,9 +87,8 @@ sub init ($ctx) {
     my $Echo = $ctx->spawn(Stella::ActorProps->new( class => 'Echo' ));
 
     my $f = future($ctx, sub ($ctx) {
-            $ctx->send( $Echo, event *Echo::Echo => 'Welcome to the Future!' );
-        }
-    );
+        $ctx->send( $Echo, event *Echo::Echo => 'Welcome to the Future!' );
+    });
 
     $f->on_success(sub ($event) {
         pass("... ON SUCCESS: $event");
