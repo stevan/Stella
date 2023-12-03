@@ -93,8 +93,10 @@ sub init ($ctx) {
     foreach ( 1 .. 10 ) {
         my $max = int(rand(10));
 
+        my $PongActor = PingPong->new( name => "Pong($_)", max => $max );
+
         my $ping = Stella::ActorProps->new( class => 'PingPong', args => { name => "Ping($_)", max => $max  } );
-        my $pong = Stella::ActorProps->new( class => 'PingPong', args => { name => "Pong($_)", max => $max  } );
+        my $pong = Stella::ActorProps->new( singleton => $PongActor );
 
         isa_ok($ping, 'Stella::ActorProps');
         isa_ok($pong, 'Stella::ActorProps');
