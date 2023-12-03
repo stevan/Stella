@@ -341,7 +341,7 @@ class Stella::ActorSystem {
             confess "Got error from select: $!" if $!;
 
             # otherwise ... we hit the timeout
-            $logger->log_from( $init_ref, DEBUG, "Woke up from timeout($wait)") if DEBUG;
+            $logger->log_from( $init_ref, DEBUG, "Woke up from timeout($wait)") if DEBUG && $wait;
             # ... return early
             return;
         }
