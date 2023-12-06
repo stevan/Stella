@@ -8,7 +8,6 @@ use Stella::Behavior;
 use Stella::Core::Timer; # loads Interval
 use Stella::Core::Watcher;
 use Stella::Core::Context;
-use Stella::Core::Mailbox;
 
 use Stella::ActorProps;
 use Stella::ActorRef;

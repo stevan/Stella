@@ -6,11 +6,6 @@ use builtin 'blessed';
 class Stella::ActorRef {
     use Carp 'confess';
 
-    use overload (
-        fallback => 1,
-        '""' => \&to_string,
-    );
-
     field $pid         :param;
     field $actor_props :param;
     field $address     :param = 'local';

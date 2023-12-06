@@ -5,11 +5,6 @@ use experimental 'class';
 class Stella::Event {
     use Carp 'confess';
 
-    use overload (
-        fallback => 1,
-        '""' => \&to_string,
-    );
-
     field $symbol  :param;
     field $payload :param = [];
 

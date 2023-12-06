@@ -70,7 +70,15 @@ class Future :isa(Stella::Actor) {
     }
 }
 
-sub future ($ctx, $producer) {
+
+# https://soft.vub.ac.be/amop/at/tutorial/actors#futures
+# https://en.wikipedia.org/wiki/Futures_and_promises#Semantics_of_futures_in_the_actor_model
+# https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/util/concurrent/Future.html
+
+# More this to Context, then I can use
+# the internal $system instead of the $ctx
+# argument here
+sub future ($ctx, $producer) { # TODO - add timeout
     my $future     = Future->new;
     my $future_ref = $ctx->spawn(Stella::ActorProps->new( singleton => $future ));
     $producer->(

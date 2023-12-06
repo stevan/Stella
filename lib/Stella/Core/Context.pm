@@ -13,11 +13,6 @@ use Stella::Core::Promise;
 class Stella::Core::Context {
     use Carp 'confess';
 
-    use overload (
-        fallback => 1,
-        '""' => \&to_string,
-    );
-
     field $actor_ref :param;
     field $system    :param;
 
@@ -58,8 +53,6 @@ class Stella::Core::Context {
     }
 
     method register ($name, $actor_ref) {
-        $actor_ref isa Stella::ActorRef || confess 'The `$actor_ref` arg must be an ActorRef';
-
         $system->register_actor( $name, $actor_ref );
     }
 
@@ -68,15 +61,10 @@ class Stella::Core::Context {
     }
 
     method spawn ($actor_props) {
-        $actor_props isa Stella::ActorProps || confess 'The `$actor_props` arg must be an ActorProps';
-
         $system->spawn( $actor_props );
     }
 
     method send ($to, $event) {
-        $to    isa Stella::ActorRef || confess 'The `$to` arg must be an ActorRef';
-        $event isa Stella::Event    || confess 'The `$event` arg must be an Event';
-
         $system->enqueue_message(
             Stella::Core::Message->new( to => $to, from => $actor_ref, event => $event )
         );
@@ -85,8 +73,6 @@ class Stella::Core::Context {
     method exit { $system->despawn( $actor_ref ) }
 
     method kill ($to_kill) {
-        $to_kill isa Stella::ActorRef || confess 'The `$to_kill` arg must be an ActorRef';
-
         $system->despawn( $to_kill );
     }
 }

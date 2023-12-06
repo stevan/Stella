@@ -14,14 +14,16 @@ class Stella::ActorSystem {
     my $PIDS = 0;
 
     field %actor_refs;     # PID => ActorRef mapping of active Actors
+    field %actor_ctxs;     # memoized ActorRef => ActorContext
     field %actor_registry; # Name => ActorRef mapping
 
-    field %watchers;  # r/w => FD => list of I/O Watcher objects
-    field @callbacks; # queue of callbacks to be run in a given tick
-    field @timers;    # queue of Timer/Interval objects to run
+    field @messages;     # queue of events
+    field @dead_letters; # messages that could not be sent
+    field %watchers;     # r/w => FD => list of I/O Watcher objects
+    field @callbacks;    # queue of callbacks to be run in a given tick
+    field @timers;       # queue of Timer/Interval objects to run
 
-    field $init    :param; # function that accepts ActorContext($init_ref) as its only argument
-    field $mailbox :param = Stella::Core::Mailbox->new;
+    field $init :param; # function that accepts ActorContext($init_ref) as its only argument
 
     field $init_ref;
     field $select;
@@ -31,8 +33,6 @@ class Stella::ActorSystem {
     field $tick = 0; # the current tick of the loop
 
     ADJUST {
-        $mailbox isa Stella::Core::Mailbox || confess 'The `mailbox` must be a Stella::Core::Mailbox';
-
         $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
 
         # set up the I/O stuff
@@ -47,6 +47,8 @@ class Stella::ActorSystem {
     ## ------------------------------------------------------------------------
 
     method register_actor ($name, $actor_ref) {
+        $actor_ref isa Stella::ActorRef || confess 'The `$actor_ref` arg must be an ActorRef';
+
         $actor_registry{ $name } = $actor_ref;
     }
 
@@ -103,7 +105,7 @@ class Stella::ActorSystem {
 
 
     method enqueue_message ($message) {
-        $mailbox->enqueue_message( $message );
+        push @messages => $message;
 
         $logger->log_from(
             $init_ref, DEBUG,
@@ -117,7 +119,7 @@ class Stella::ActorSystem {
     }
 
     method add_to_dead_letter ($reason, $message) {
-        $mailbox->add_dead_letter( $reason, $message );
+        push @dead_letters => [ $reason, $message ];
 
         $logger->log_from(
             $init_ref, ERROR,
@@ -295,15 +297,16 @@ class Stella::ActorSystem {
 
         # messages ...
 
-        if ($mailbox->has_messages) {
-            my @msgs = $mailbox->drain_messages;
+        if (@messages) {
+            my @msgs  = @messages;
+            @messages = ();
             while (@msgs) {
                 my $msg = shift @msgs;
                 if ( my $actor_ref = $actor_refs{ $msg->to } ) {
                     try {
                         $actor_ref->apply(
                             # TODO: memoize the Context objects
-                            Stella::Core::Context->new(
+                            $actor_ctxs{ $actor_ref } //= Stella::Core::Context->new(
                                 actor_ref => $actor_ref,
                                 system    => $self
                             ),
@@ -421,7 +424,8 @@ class Stella::ActorSystem {
 
     method loop {
 
-        my $now = $self->now;
+        my $start = $self->now;
+        my $now   = $start;
 
         $logger->line("init") if INFO;
         $self->run_init;
@@ -430,14 +434,14 @@ class Stella::ActorSystem {
 
         # TODO: move this while condition into method
         # so that we can add the LOOP_FOREVER feature
-        while ( @timers || @callbacks || $mailbox->has_messages ) {
+        while ( @timers || @callbacks || @messages ) {
             $tick++;
             $logger->line(sprintf "tick(%03d)" => $tick) if INFO;
             $self->tick;
 
             my $wait = 0;
 
-            if ( !$mailbox->has_messages && @timers ) {
+            if ( !@messages && @timers ) {
                 if (my $next_timer = $self->get_next_timer) {
                     $wait = $next_timer->[0] - $time;
                 }
@@ -450,12 +454,19 @@ class Stella::ActorSystem {
 
             $logger->line( sprintf 'wait(%f)' => $wait ) if INFO && $wait;
 
-            $self->check_watchers( $wait );
+            $self->check_watchers( $wait )
+                if keys %{$watchers{r}}
+                || keys %{$watchers{w}}
+                || $wait;
         }
         $logger->line("end") if INFO;
 
         $self->exit_loop;
         $logger->line("exited") if INFO;
+
+        $now = $self->now;
+
+        $logger->log_from( $init_ref, DEBUG, "Runtime: (".($now - $start).")") if DEBUG;
 
         return;
     }
@@ -471,7 +482,7 @@ class Stella::ActorSystem {
         # and then it can add these things at the
         # end.
         +{
-            dead_letter_queue => [ $mailbox->dump_dead_letters ],
+            dead_letter_queue => [ @dead_letters ],
             zombies           => [ keys %actor_refs   ],
             watchers          => {
                 # TODO - improve this

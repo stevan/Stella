@@ -6,11 +6,6 @@ use builtin 'blessed';
 class Stella::ActorProps {
     use Carp 'confess';
 
-    use overload (
-        fallback => 1,
-        '""' => \&to_string,
-    );
-
     field $class     :param = undef;
     field $args      :param = undef;
     field $singleton :param = undef;
