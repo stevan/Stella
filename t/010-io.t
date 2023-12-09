@@ -22,7 +22,7 @@ class Input :isa(Stella::Actor) {
     }
 
     method Read ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, "...got *Read" ) if INFO;
+        $logger->log( INFO, "...got *Read" ) if INFO;
 
         my $w = $ctx->add_watcher(
             fh       => \*STDIN,
@@ -32,11 +32,11 @@ class Input :isa(Stella::Actor) {
                 my $input = <$fh>;
                 chomp $input;
                 $logger->log_from( $ctx, INFO, "... read ($input) from STDIN, sending *Echo" ) if INFO;
-                $ctx->send( $ctx->self, Stella::Event->new( symbol => *Echo, payload => [ $input ] ) );
+                $ctx->self->send( Stella::Event->new( symbol => *Echo, payload => [ $input ] ) );
             }
         );
 
-        $logger->log_from( $ctx, INFO, "... Setting (5)s timeout while waiting on STDIN " ) if INFO;
+        $logger->log( INFO, "... Setting (5)s timeout while waiting on STDIN " ) if INFO;
         $ctx->add_timer(
             timeout  => 5,
             callback => sub {
@@ -48,8 +48,8 @@ class Input :isa(Stella::Actor) {
     }
 
     method Echo ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, "...got *Echo" ) if INFO;
-        $logger->log_from( $ctx, INFO, "Message Payload: [".(join ', ' => $message->event->payload->@*)."]" ) if INFO;
+        $logger->log( INFO, "...got *Echo" ) if INFO;
+        $logger->log( INFO, "Message Payload: [".(join ', ' => $message->event->payload->@*)."]" ) if INFO;
     }
 
     method behavior {

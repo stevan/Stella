@@ -21,8 +21,8 @@ class Echo :isa(Stella::Actor) {
     }
 
     method Echo ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, "...got *Echo" ) if INFO;
-        $ctx->send( $message->from, $message->event );
+        $logger->log( INFO, "...got *Echo" ) if INFO;
+        $message->from->send( $message->event );
     }
 
     method behavior {

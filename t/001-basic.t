@@ -43,29 +43,29 @@ class PingPong :isa(Stella::Actor) {
     method Start ($ctx, $message) {
         my ($Other) = $message->event->payload->@*;
 
-        $ctx->send( $Other, event *Ping );
+        $Other->send( event *Ping );
     }
 
     method Ping ($ctx, $message) {
         if ($pings < $max) {
-            $logger->log_from( $ctx, INFO, "...got Ping($name)[$pings] <= $max" ) if INFO;
-            $ctx->send( $message->from, event *Pong );
+            $logger->log( INFO, "...got Ping($name)[$pings] <= $max" ) if INFO;
+            $message->from->send( event *Pong );
             $pings++;
         }
         else {
-            $logger->log_from( $ctx, WARN, "!!! ending Ping at($name)[$pings] <= $max" ) if WARN;
+            $logger->log( WARN, "!!! ending Ping at($name)[$pings] <= $max" ) if WARN;
             _exit_both( $ctx, $message->from );
         }
     }
 
     method Pong ($ctx, $message) {
         if ($pongs < $max) {
-            $logger->log_from( $ctx, INFO, "... got Pong($name)[$pongs] <= $max" ) if INFO;
-            $ctx->send( $message->from, event *Ping );
+            $logger->log( INFO, "... got Pong($name)[$pongs] <= $max" ) if INFO;
+            $message->from->send( event *Ping );
             $pongs++;
         }
         else {
-            $logger->log_from( $ctx, WARN, "!!! ending Pong at($name)[$pongs] <= $max" ) if WARN;
+            $logger->log( WARN, "!!! ending Pong at($name)[$pongs] <= $max" ) if WARN;
             _exit_both( $ctx, $message->from );
         }
     }

@@ -22,7 +22,7 @@ class Foo :isa(Stella::Actor) {
     }
 
     method Bar ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, "...got *Bar" ) if INFO;
+        $logger->log( INFO, "...got *Bar" ) if INFO;
         pass('... we got the *Bar message');
     }
 
@@ -43,7 +43,7 @@ sub init ($ctx) {
         timeout  => 1,
         callback => sub {
             $logger->log_from( $ctx, INFO, "...Sending *Bar to Foo within Timer(1)" ) if INFO;
-            $ctx->send( $Foo, Stella::Event->new( symbol => *Foo::Bar ) )
+            $Foo->send( Stella::Event->new( symbol => *Foo::Bar ) )
         }
     );
 

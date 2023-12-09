@@ -30,10 +30,10 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
 
     method Request ($ctx, $message) {
         my ($num_elements) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*Request called with num_elements('.$num_elements.')' ) if INFO;
+        $logger->log( INFO, '*Request called with num_elements('.$num_elements.')' ) if INFO;
 
         if ( $observer ) {
-            $logger->log_from( $ctx, INFO, '*Request called, killing old Observer('.$observer.')' ) if INFO;
+            $logger->log( INFO, '*Request called, killing old Observer('.$observer.')' ) if INFO;
             $ctx->kill( $observer );
         }
 
@@ -49,18 +49,18 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
         #$observer->trap( *SIGEXIT );
 
         while ($num_elements--) {
-            $ctx->send( $publisher, event *Stella::Streams::Publisher::GetNext, $observer );
+            $publisher->send( event *Stella::Streams::Publisher::GetNext, $observer );
         }
     }
 
     method Cancel ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, '*Cancel called' ) if INFO;
-        $ctx->send( $publisher, event *Stella::Streams::Publisher::Unsubscribe, $ctx->self );
+        $logger->log( INFO, '*Cancel called' ) if INFO;
+        $publisher->send( event *Stella::Streams::Publisher::Unsubscribe, $ctx->self );
     }
 
     method OnUnsubscribe ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, '*OnUnsubscribe called' ) if INFO;
-        $ctx->send( $subscriber, event *Stella::Streams::Subscriber::OnUnsubscribe );
+        $logger->log( INFO, '*OnUnsubscribe called' ) if INFO;
+        $subscriber->send( event *Stella::Streams::Subscriber::OnUnsubscribe );
         $ctx->kill( $observer );
         $ctx->exit;
     }

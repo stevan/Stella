@@ -24,7 +24,7 @@ class Echo :isa(Stella::Actor) {
 
     method Echo ($ctx, $message) {
         my ($msg) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*Echo called with Msg('.$msg.')' ) if INFO;
+        $logger->log( INFO, '*Echo called with Msg('.$msg.')' ) if INFO;
     }
 
     method behavior {
@@ -42,7 +42,7 @@ class EchoChamber :isa(Stella::Actor) {
     }
 
     method Init ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, '*Init called' ) if INFO;
+        $logger->log( INFO, '*Init called' ) if INFO;
 
         $ctx->send(
             $ctx->lookup('sys'),
@@ -52,7 +52,7 @@ class EchoChamber :isa(Stella::Actor) {
 
     method Start ($ctx, $message) {
         my ($Echo) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*Start called with Echo ActorRef('.$Echo.')' ) if INFO;
+        $logger->log( INFO, '*Start called with Echo ActorRef('.$Echo.')' ) if INFO;
 
         my $System = $ctx->lookup('sys');
 

@@ -33,7 +33,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         # type check $subscriber here and send
         # an OnError accordingly
 
-        $logger->log_from( $ctx, INFO, '*Subscribe called with Subscriber('.$subscriber.')' ) if INFO;
+        $logger->log( INFO, '*Subscribe called with Subscriber('.$subscriber.')' ) if INFO;
 
         my $subscription = $ctx->spawn(
             Stella::ActorProps->new(
@@ -47,7 +47,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         #$subscriber->trap( *SIGEXIT );
 
         push @subscriptions => $subscription;
-        $ctx->send( $subscriber, event *Stella::Streams::Subscriber::OnSubscribe, $subscription );
+        $subscriber->send( event *Stella::Streams::Subscriber::OnSubscribe, $subscription );
     }
 
     method Unsubscribe ($ctx, $message) {
@@ -57,14 +57,14 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         # type check $subscription here and send
         # an OnError accordingly
 
-        $logger->log_from( $ctx, INFO, '*Unsubscribe called with Subscription('.$subscription.')' ) if INFO;
+        $logger->log( INFO, '*Unsubscribe called with Subscription('.$subscription.')' ) if INFO;
 
         @subscriptions = grep $_ ne $subscription, @subscriptions;
 
-        $ctx->send( $subscription, event *Stella::Streams::Subscription::OnUnsubscribe );
+        $subscription->send( event *Stella::Streams::Subscription::OnUnsubscribe );
 
         if (scalar @subscriptions == 0) {
-            $logger->log_from( $ctx, INFO, '*Unsubscribe called and no more subscrptions, exiting') if INFO;
+            $logger->log( INFO, '*Unsubscribe called and no more subscrptions, exiting') if INFO;
             # TODO: this should be more graceful, sending
             # a shutdown message or something, **shrug**
             $ctx->exit;
@@ -78,23 +78,23 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
         # type check $observer here and send
         # an OnError accordingly
 
-        $logger->log_from( $ctx, INFO, '*GetNext called with Observer('.$observer.')' ) if INFO;
+        $logger->log( INFO, '*GetNext called with Observer('.$observer.')' ) if INFO;
 
         my $next;
         try {
             $next = $source->get_next;
         } catch ($e) {
-            $ctx->send( $observer, event *Stella::Streams::Observer::OnError, $e );
+            $observer->send( event *Stella::Streams::Observer::OnError, $e );
             # ???
             #return;
         }
 
         if ( $next ) {
-            $logger->log_from( $ctx, INFO, '... *GetNext sending next('.$next.')') if INFO;
-            $ctx->send( $observer, event *Stella::Streams::Observer::OnNext, $next );
+            $logger->log( INFO, '... *GetNext sending next('.$next.')') if INFO;
+            $observer->send( event *Stella::Streams::Observer::OnNext, $next );
         }
         else {
-            $ctx->send( $observer, event *Stella::Streams::Observer::OnComplete );
+            $observer->send( event *Stella::Streams::Observer::OnComplete );
         }
     }
 

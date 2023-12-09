@@ -26,7 +26,7 @@ class Input :isa(Stella::Actor) {
     }
 
     method Read ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, "...got *Read" ) if INFO;
+        $logger->log( INFO, "...got *Read" ) if INFO;
 
         my $socket = IO::Socket::SSL->new('www.google.com:443') || die 'Could not connect SSL to google';
            $socket->autoflush(1);
@@ -61,7 +61,7 @@ class Input :isa(Stella::Actor) {
             }
         );
 
-        $logger->log_from( $ctx, INFO, "... Setting (30)s timeout while waiting on Socket " ) if INFO;
+        $logger->log( INFO, "... Setting (30)s timeout while waiting on Socket " ) if INFO;
         $t = $ctx->add_timer(
             timeout  => 30,
             callback => sub {
@@ -76,8 +76,8 @@ class Input :isa(Stella::Actor) {
     }
 
     method Echo ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, "...got *Echo" ) if INFO;
-        $logger->log_from( $ctx, INFO, "Message Payload: [".(join ', ' => $message->event->payload->@*)."]" ) if INFO;
+        $logger->log( INFO, "...got *Echo" ) if INFO;
+        $logger->log( INFO, "Message Payload: [".(join ', ' => $message->event->payload->@*)."]" ) if INFO;
     }
 
     method behavior {

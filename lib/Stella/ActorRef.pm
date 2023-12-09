@@ -20,6 +20,10 @@ class Stella::ActorRef {
         $actor_props isa Stella::ActorProps || confess 'The `$actor_props` param must be an ActorProps';
     }
 
+    method context { $context }
+
+    method actor_isa ($class) { $actor_props->class->isa( $class ) }
+
     # ... Lifecycle
 
     method start ($ctx) {
@@ -41,12 +45,10 @@ class Stella::ActorRef {
 
     # ...
 
-    method context { $context }
+    our $CALLER;
 
-    method actor_isa ($class) { $actor_props->class->isa( $class ) }
-
-    method to_string {
-        sprintf '%03d:%s@%s' => $pid, $actor_props->class, $address;
+    method send ($event) {
+        $context->send( $context->self, $event, $CALLER );
     }
 
     method apply ($message) {
@@ -54,11 +56,19 @@ class Stella::ActorRef {
 
         $actor && $behavior && $context || confess 'Cannot call `apply` before starting the Actor';
 
+        local $CALLER = $self;
+
         $behavior->apply(
             $actor,
             $context,
             $message
         );
+    }
+
+    # ...
+
+    method to_string {
+        sprintf '%03d:%s@%s' => $pid, $actor_props->class, $address;
     }
 
     method pack {

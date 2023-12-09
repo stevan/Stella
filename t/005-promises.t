@@ -25,12 +25,12 @@ class Service :isa(Stella::Actor) {
     }
 
     method Request ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, "... got *Request" ) if INFO;
+        $logger->log( INFO, "... got *Request" ) if INFO;
 
         my $event = $message->event;
         my ($action, $args, $promise) = $event->payload->@*;
 
-        $logger->log_from( $ctx, INFO, "got args ($action, [".(join ',', @$args)."] $promise)" ) if INFO;
+        $logger->log( INFO, "got args ($action, [".(join ',', @$args)."] $promise)" ) if INFO;
 
         my ($x, $y) = @$args;
         try {
@@ -46,10 +46,10 @@ class Service :isa(Stella::Actor) {
                     ]
                 )
             );
-            $logger->log_from( $ctx, INFO, "Promise resolved!" ) if INFO;
+            $logger->log( INFO, "Promise resolved!" ) if INFO;
         } catch ($e) {
             chomp $e;
-            $logger->log_from( $ctx, INFO, "Error running service: $e" ) if INFO;
+            $logger->log( INFO, "Error running service: $e" ) if INFO;
             $promise->reject(
                 Stella::Event->new( symbol => *Error, payload => [ $e ] )
             );

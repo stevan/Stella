@@ -25,17 +25,17 @@ class Stella::Observer::Callback :isa(Stella::Actor) {
     }
 
     method on_complete ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, '*OnComplete observed' ) if INFO;
+        $logger->log( INFO, '*OnComplete observed' ) if INFO;
         $on_complete->($ctx, $message);
     }
 
     method on_next ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, '*OnNext observed' ) if INFO;
+        $logger->log( INFO, '*OnNext observed' ) if INFO;
         $on_next->($ctx, $message);
     }
 
     method on_error ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, '*OnError observed' ) if INFO;
+        $logger->log( INFO, '*OnError observed' ) if INFO;
         $on_error->($ctx, $message);
     }
 }

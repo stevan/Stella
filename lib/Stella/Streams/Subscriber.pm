@@ -29,41 +29,41 @@ class Stella::Streams::Subscriber :isa(Stella::Actor) {
 
     method OnSubscribe ($ctx, $message) {
         my ($s) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*OnSubscribe called with Subscription('.$s.')' ) if INFO;
+        $logger->log( INFO, '*OnSubscribe called with Subscription('.$s.')' ) if INFO;
 
         # TODO:
         # check the type of $s here and throw an OnError
         # (or better yet, make typed events)
 
         $subscription = $s;
-        $ctx->send( $subscription, event *Stella::Streams::Subscription::Request, $request_size );
+        $subscription->send( event *Stella::Streams::Subscription::Request, $request_size );
     }
 
     method OnUnsubscribe ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, '*OnUnsubscribe called' ) if INFO;
+        $logger->log( INFO, '*OnUnsubscribe called' ) if INFO;
         $ctx->exit;
     }
 
     method OnComplete ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, '*OnComplete called' ) if INFO;
+        $logger->log( INFO, '*OnComplete called' ) if INFO;
         $sink->done;
-        $ctx->send( $subscription, event *Stella::Streams::Subscription::Cancel );
+        $subscription->send( event *Stella::Streams::Subscription::Cancel );
     }
 
     method OnRequestComplete ($ctx, $message) {
-        $logger->log_from( $ctx, INFO, '*OnRequestComplete called' ) if INFO;
-        $ctx->send( $subscription, event *Stella::Streams::Subscription::Request, $request_size );
+        $logger->log( INFO, '*OnRequestComplete called' ) if INFO;
+        $subscription->send( event *Stella::Streams::Subscription::Request, $request_size );
     }
 
     method OnNext ($ctx, $message) {
         my ($value) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*OnNext called with value('.$value.')' ) if INFO;
+        $logger->log( INFO, '*OnNext called with value('.$value.')' ) if INFO;
         $sink->drip( $value );
     }
 
     method OnError ($ctx, $message) {
         my ($error) = $message->event->payload->@*;
-        $logger->log_from( $ctx, INFO, '*OnError called with error('.$error.')' ) if INFO;
+        $logger->log( INFO, '*OnError called with error('.$error.')' ) if INFO;
     }
 
     method behavior {

@@ -24,7 +24,7 @@ class Foo :isa(Stella::Actor) {
 
     method Bar ($ctx, $message) {
         $count++;
-        $logger->log_from( $ctx, INFO, "...got *Bar :count($count)" ) if INFO;
+        $logger->log( INFO, "...got *Bar :count($count)" ) if INFO;
         pass("... we got the *Bar message :count($count)");
         if ($count > 6) {
             fail("... we should not get more than ~5 messages, got ($count)");
@@ -48,7 +48,7 @@ sub init ($ctx) {
         timeout  => 1,
         callback => sub {
             $logger->log_from( $ctx, INFO, "...Sending *Bar to Foo within Interval(1)" ) if INFO;
-            $ctx->send( $Foo, Stella::Event->new( symbol => *Foo::Bar ) )
+            $Foo->send( Stella::Event->new( symbol => *Foo::Bar ) )
         }
     );
 
