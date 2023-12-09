@@ -12,6 +12,7 @@ class Stella::ActorRef {
 
     field $actor;
     field $behavior;
+    field $context;
 
     ADJUST {
         defined $pid                        || confess 'The `$pid` param must defined value';
@@ -19,20 +20,28 @@ class Stella::ActorRef {
         $actor_props isa Stella::ActorProps || confess 'The `$actor_props` param must be an ActorProps';
     }
 
-    method start {
+    # ... Lifecycle
+
+    method start ($ctx) {
         $actor    = $actor_props->new_actor;
         $behavior = $actor->behavior;
+        $context  = $ctx;
     }
 
     method stop {
         $actor    = undef;
         $behavior = undef;
+        $context  = undef;
     }
 
-    method restart {
+    method restart ($ctx) {
         $self->stop;
-        $self->start;
+        $self->start($ctx);
     }
+
+    # ...
+
+    method context { $context }
 
     method actor_isa ($class) { $actor_props->class->isa( $class ) }
 
@@ -40,15 +49,14 @@ class Stella::ActorRef {
         sprintf '%03d:%s@%s' => $pid, $actor_props->class, $address;
     }
 
-    method apply ($ctx, $message) {
-        $ctx     isa Stella::Core::Context || confess 'The `$ctx` arg must be a ActorContext';
+    method apply ($message) {
         $message isa Stella::Core::Message || confess 'The `$message` arg must be a Message';
 
-        $actor && $behavior || confess 'Cannot call `apply` before starting the Actor';
+        $actor && $behavior && $context || confess 'Cannot call `apply` before starting the Actor';
 
         $behavior->apply(
             $actor,
-            $ctx,
+            $context,
             $message
         );
     }

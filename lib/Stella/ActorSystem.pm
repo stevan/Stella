@@ -53,7 +53,7 @@ class Stella::ActorSystem {
     }
 
     method lookup_actor ($name) {
-        $actor_registry{ $name } || $actor_refs{ $name }
+        $actor_registry{ $name };
     }
 
     method spawn ($actor_props) {
@@ -68,7 +68,10 @@ class Stella::ActorSystem {
             " >> caller: ".(caller(2))[3]
         ) if DEBUG && $init_ref;
 
-        $a->start;
+        $a->start(Stella::Core::Context->new(
+            actor_ref => $a,
+            system    => $self
+        ));
         $a;
     }
 
@@ -304,14 +307,7 @@ class Stella::ActorSystem {
                 my $msg = shift @msgs;
                 if ( my $actor_ref = $actor_refs{ $msg->to } ) {
                     try {
-                        $actor_ref->apply(
-                            # TODO: memoize the Context objects
-                            $actor_ctxs{ $actor_ref } //= Stella::Core::Context->new(
-                                actor_ref => $actor_ref,
-                                system    => $self
-                            ),
-                            $msg
-                        );
+                        $actor_ref->apply( $msg );
                     } catch ($e) {
                         $self->add_to_dead_letter( $e => $msg );
                     }

@@ -55,7 +55,7 @@ class Stella::Streams::Subscription :isa(Stella::Actor) {
 
     method Cancel ($ctx, $message) {
         $logger->log_from( $ctx, INFO, '*Cancel called' ) if INFO;
-        $ctx->send( $publisher, event *Stella::Streams::Publisher::Unsubscribe, $ctx->actor_ref );
+        $ctx->send( $publisher, event *Stella::Streams::Publisher::Unsubscribe, $ctx->self );
     }
 
     method OnUnsubscribe ($ctx, $message) {

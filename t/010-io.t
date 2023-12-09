@@ -32,7 +32,7 @@ class Input :isa(Stella::Actor) {
                 my $input = <$fh>;
                 chomp $input;
                 $logger->log_from( $ctx, INFO, "... read ($input) from STDIN, sending *Echo" ) if INFO;
-                $ctx->send( $ctx->actor_ref, Stella::Event->new( symbol => *Echo, payload => [ $input ] ) );
+                $ctx->send( $ctx->self, Stella::Event->new( symbol => *Echo, payload => [ $input ] ) );
             }
         );
 

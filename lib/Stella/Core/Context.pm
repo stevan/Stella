@@ -21,8 +21,8 @@ class Stella::Core::Context {
         $system    isa Stella::ActorSystem || confess 'The `$system` param must be an ActorSystem';
     }
 
-    method actor_ref { $actor_ref }
-    method system    { $system    }
+    method self   { $actor_ref }
+    method system { $system    }
 
     method to_string {
         $actor_ref->to_string.'.Context';
@@ -64,9 +64,9 @@ class Stella::Core::Context {
         $system->spawn( $actor_props );
     }
 
-    method send ($to, $event) {
+    method send ($to, $event, $from=undef) {
         $system->enqueue_message(
-            Stella::Core::Message->new( to => $to, from => $actor_ref, event => $event )
+            Stella::Core::Message->new( to => $to, from => $from // $actor_ref, event => $event )
         );
     }
 

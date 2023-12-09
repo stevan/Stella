@@ -28,7 +28,7 @@ class Stella::Tools::Debug::Logger {
 
         my $actor_ref = $actor_ref_or_ctx isa Stella::ActorRef
             ? $actor_ref_or_ctx
-            : $actor_ref_or_ctx->actor_ref;
+            : $actor_ref_or_ctx->self;
 
         $fh->print(
             $level_map{ $level },

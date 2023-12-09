@@ -39,7 +39,7 @@ class Stella::Streams::Publisher :isa(Stella::Actor) {
             Stella::ActorProps->new(
                 class => 'Stella::Streams::Subscription',
                 args  => {
-                    publisher  => $ctx->actor_ref,
+                    publisher  => $ctx->self,
                     subscriber => $subscriber
                 }
             )
