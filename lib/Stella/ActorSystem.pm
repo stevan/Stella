@@ -56,6 +56,10 @@ class Stella::ActorSystem {
         $actor_registry{ $name };
     }
 
+    method is_alive ($actor_ref) {
+        exists $actor_refs{ $actor_ref }
+    }
+
     method spawn ($actor_props) {
         $actor_props isa Stella::ActorProps || confess 'The `$actor_props` arg must be an Stella::ActorProps';
 

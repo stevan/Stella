@@ -38,12 +38,21 @@ class PingPong :isa(Stella::Actor) {
         $logger = Stella::Tools::Debug->logger if LOG_LEVEL;
     }
 
-    my sub _exit_both ($ctx, $a) {  $ctx->exit; $ctx->kill( $a ) }
-
     method Start ($ctx, $message) {
         my ($Other) = $message->event->payload->@*;
 
         $Other->send( event *Ping );
+    }
+
+    method Stop ($ctx, $message) {
+        $ctx->exit;
+        if ( $ctx->system->is_alive( $message->from ) ) {
+            $logger->log( WARN, "... sender is alive, so sending Stop" ) if WARN;
+            $message->from->send( event *Stop );
+        }
+        else {
+            $logger->log( WARN, "... sender is not alive, clean exit" ) if WARN;
+        }
     }
 
     method Ping ($ctx, $message) {
@@ -54,7 +63,7 @@ class PingPong :isa(Stella::Actor) {
         }
         else {
             $logger->log( WARN, "!!! ending Ping at($name)[$pings] <= $max" ) if WARN;
-            _exit_both( $ctx, $message->from );
+            $message->from->send( event *Stop );
         }
     }
 
@@ -66,12 +75,12 @@ class PingPong :isa(Stella::Actor) {
         }
         else {
             $logger->log( WARN, "!!! ending Pong at($name)[$pongs] <= $max" ) if WARN;
-            _exit_both( $ctx, $message->from );
+            $message->from->send( event *Stop );
         }
     }
 
     method behavior {
-        Stella::Behavior::Method->new( allowed => [ *Start, *Ping, *Pong ] );
+        Stella::Behavior::Method->new( allowed => [ *Start, *Stop, *Ping, *Pong ] );
     }
 }
 
