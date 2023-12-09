@@ -14,7 +14,6 @@ class Stella::ActorSystem {
     my $PIDS = 0;
 
     field %actor_refs;     # PID => ActorRef mapping of active Actors
-    field %actor_ctxs;     # memoized ActorRef => ActorContext
     field %actor_registry; # Name => ActorRef mapping
 
     field @messages;     # queue of events
@@ -68,7 +67,7 @@ class Stella::ActorSystem {
 
         $logger->log_from(
             $init_ref, DEBUG,
-            (sprintf "Spawning ACTOR(%s) REF(%s)" => "$actor_props", "$a"),
+            (sprintf "Spawning ACTOR(%s) REF(%s)" => $actor_props->to_string, $a->to_string),
             " >> caller: ".(caller(2))[3]
         ) if DEBUG && $init_ref;
 
@@ -84,12 +83,12 @@ class Stella::ActorSystem {
 
         $logger->log_from(
             $init_ref, DEBUG,
-            (sprintf "Request despawning of REF(%s)" => "$actor_ref"),
+            (sprintf "Request despawning of REF(%s)" => $actor_ref->to_string),
             " >> caller: ".(caller(2))[3]
         ) if DEBUG;
 
         if ($immediate) {
-            $logger->log_from( $init_ref, DEBUG, "Immediate!! Despawning REF($actor_ref)") if DEBUG;
+            $logger->log_from( $init_ref, DEBUG, "Immediate!! Despawning REF(".$actor_ref->to_string.")") if DEBUG;
             $actor_ref->stop;
             delete $actor_refs{ $actor_ref };
         }
@@ -99,7 +98,7 @@ class Stella::ActorSystem {
             # is done as soon as possible after
             # this tick
             unshift @callbacks => sub {
-                $logger->log_from( $init_ref, DEBUG, "... Despawning REF($actor_ref)") if DEBUG;
+                $logger->log_from( $init_ref, DEBUG, "... Despawning REF(".$actor_ref->to_string.")") if DEBUG;
                 $actor_ref->stop;
                 delete $actor_refs{ $actor_ref };
             };
@@ -117,9 +116,9 @@ class Stella::ActorSystem {
         $logger->log_from(
             $init_ref, DEBUG,
             (sprintf "Enqueue Message TO(%s) FROM(%s) EVENT(%s)" =>
-                $message->to,
-                $message->from,
-                $message->event,
+                $message->to->to_string,
+                $message->from->to_string,
+                $message->event->to_string,
             ),
             " >> caller: ".(caller(2))[3]
         ) if DEBUG;
