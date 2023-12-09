@@ -48,7 +48,8 @@ class Stella::ActorRef {
     our $CALLER;
 
     method send ($event) {
-        $context->send( $context->self, $event, $CALLER );
+        $CALLER // confess 'Cannot call `send` on an ActorRef outside of an Actor method body';
+        $context->send( $self, $event, $CALLER );
     }
 
     method apply ($message) {

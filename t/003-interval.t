@@ -48,7 +48,7 @@ sub init ($ctx) {
         timeout  => 1,
         callback => sub {
             $logger->log_from( $ctx, INFO, "...Sending *Bar to Foo within Interval(1)" ) if INFO;
-            $Foo->send( Stella::Event->new( symbol => *Foo::Bar ) )
+            $ctx->send( $Foo, Stella::Event->new( symbol => *Foo::Bar ) )
         }
     );
 
