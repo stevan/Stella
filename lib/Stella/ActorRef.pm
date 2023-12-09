@@ -20,8 +20,6 @@ class Stella::ActorRef {
         $actor_props isa Stella::ActorProps || confess 'The `$actor_props` param must be an ActorProps';
     }
 
-    method context { $context }
-
     method actor_isa ($class) { $actor_props->class->isa( $class ) }
 
     # ... Lifecycle
